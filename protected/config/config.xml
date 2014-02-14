@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+    <db>
+        <host>localhost</host>
+        <name>alenablog</name>
+        <user>blog_user</user>
+        <password>12345</password>
+    </db>
+</root>

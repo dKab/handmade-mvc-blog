@@ -4,6 +4,7 @@ class AppHelper {
     private static $instance;
     private $config = "protected/config/config.xml";
     private $options;
+    private static $twig;
     
     //private $transactionsDir = "transactions";
     
@@ -52,6 +53,17 @@ class AppHelper {
             $this->connection = $connection;
         }
         return $this->connection;   
+    }
+    
+    public static function twig()
+    {   
+        $templateDir = "protected/views";
+        $layoutDir = $templateDir . "/layouts"; 
+        if ( ! isset(self::$twig) ) {
+        $loader = new Twig_Loader_Filesystem(array($templateDir, $layoutDir));
+        self::$twig = new Twig_Environment($loader);
+        }
+        return self::$twig;
     }
     
 }

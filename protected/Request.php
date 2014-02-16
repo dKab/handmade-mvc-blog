@@ -6,6 +6,7 @@ class Request
     
     public function __construct() {
         $this->init();
+        AppHelper::setRequest($this);
     }
     
     private function init()
@@ -28,6 +29,7 @@ class Request
     public function setProperty($key, $val)
     {
         $this->properties[$key] = $val;
+        return $this;
     }
     
     public function addFeedback ($msg)
@@ -40,12 +42,18 @@ class Request
         return $this->feedback;
     }
     
-    public function getAction()
+    public function getRoute()
     {
-        $parts = explode("/", $this->getProperty('route'));
-        if ( ! empty($parts[1])) {
-            $action = str_replace(array(".", "/", "\\"), "", $parts[1]);
-            return $action;
-        } else { return null; }
+        $route = array();
+        $parts = explode("/", $this->getProperty('REQUEST_URI'));
+        for ($i=1; $i< min(count($parts), 3); $i++) {
+            if ( ! empty($parts[$i])) {
+                $parts[$i] = str_replace(array(".", "\\"), "", $parts[$i]);
+                $parts[$i] = preg_replace("/(\\w)\\?.*/ui", "{1}", $parts[$i]);
+                $route[] = $parts[$i];
+            }
+        }
+        return $route;
     }
+    
 }

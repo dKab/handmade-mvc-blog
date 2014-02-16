@@ -2,18 +2,18 @@
 
 class PostManager extends Transaction {
     
-    public function __construct($dbh)
+    public function __construct()
     {
-        parent::__construct($dbh);
+        parent::__construct();
     }
     
     const DRAFT = 1;
     const PUBLISHED = 2;
     const ARCHIVE = 3;
     
-    private static $getPublished = "SELECT * FROM posts
+    private static $findByStatus = "SELECT * FROM posts
            WHERE status =
-           self::PUBLISHED
+           :status
            ORDER BY create_time DESC";
     
     private static $getAll = "SELECT posts.*, lookup.name, lookup.position
@@ -38,6 +38,15 @@ class PostManager extends Transaction {
     {
         $ret = array();
         $sth = $this->doStatement(self::$getAll);
+        $posts = $sth->fetchAll(PDO::FETCH_ASSOC);
+        return $posts;
+    }
+    public function getPublished()
+    {
+        $ret = array();
+        $sth = $this->doStatement(self::$findByStatus, array(
+            'status'=>self::PUBLISHED
+                ));
         $posts = $sth->fetchAll(PDO::FETCH_ASSOC);
         return $posts;
     }

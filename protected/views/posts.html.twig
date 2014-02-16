@@ -1,14 +1,14 @@
 {% extends "main.html.twig" %}
-
 {% block title %} {{ title }} {% endblock %}
-
 {% block content %}
   {% if posts is not empty %}
         <ul>
     {% for post in posts %}
             <li>
                 <h2>{{ post.title }}</h2><br />
+                {% if user is defined and user is not empty %}
                 <div class="post_status">Статус: {{ post.name }}</div>
+                {% endif %}
                        Опубликовано: 
                             {{ post.create_time }} <br />
                  {{ post.body|nl2br }}

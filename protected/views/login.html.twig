@@ -1,0 +1,24 @@
+{% extends "main.html.twig" %}
+{% block content %}
+<style type="text/css">
+    label {
+        width: 80px;
+        display: inline-block;
+    }
+    input {
+        margin: 5px;
+    }
+</style>
+<form id="login_form" method="POST" action="/admin">
+          <label for="name">Логин</label>
+          <input type="text" name='name'></input><br />
+          <label for="password">Пароль</label>
+          <input type="password" name='password'></input><br />
+          <input type="submit" value='Войти'></input>
+</form>
+
+{% if feedback is defined %}
+<div class="feedback">{{ feedback }} </div>
+{% endif %}
+
+{% endblock %}

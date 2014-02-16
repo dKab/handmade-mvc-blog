@@ -1,33 +1,40 @@
 <?php
-class Controller
+abstract class Controller
 {
-    private static $defaultAction;
+    // protected $layout="main"; uncomment this line if don't use any template engine 
+            
+    final public function __construct() { }
     
-    public function __construct()
+    final public function execute($action=null)
     {
-        require_once 'actions/DefaultAction.php';
-        self::$defaultAction = new DefaultAction();
-    }
-    
-    public function getAction(Request $request)
-    {
-        $action = $request->getAction();
-        $sep = DIRECTORY_SEPARATOR;
-        if ( ! $action ) {
-            return self::$defaultAction;
-        }
-        $filepath="protected{$sep}actions{$sep}" . ucfirst($action) . "Action.php";
-        $classname=  ucfirst($action) . "Action";
-        if (file_exists($filepath)) {
-            require_once "$filepath";
-            if ( class_exists($classname) && $classname instanceof Action) {
-                return new $classname();
+        if ( $action ) {
+            if ( method_exists($this, $action) ) {
+                return $this->$action();
             } else {
-                return false;
-                //TODO redirect to 404 page
+                throw new NotFoundExceptionException("couldn't found requested action");
             }
+            
+        } else {
+            return $this->indexAction();
         }
-        return clone self::$defaultAction;
     }
+    
+    abstract protected function indexAction();
+    /*
+     * don't need it if we use Twig
+    protected function render($view, array $data, $layout=null)
+    {
+        if (is_array($data)) {
+            extract($data);
+        }
+        if ($layout) {
+            $this->layout = $layout;
+        }
+        $content = $view;
+        $sep = DIRECTORY_SEPARATOR;
+        include "views{$sep}layouts{$sep}{$this->layout}.php";
+    }
+     * 
+     */
 }
 

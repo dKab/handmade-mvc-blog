@@ -6,7 +6,7 @@ class AppHelper {
     private $options;
     private static $twig;
     
-    //private $transactionsDir = "transactions";
+    private static $request;
     
     private $connection;
 
@@ -65,5 +65,13 @@ class AppHelper {
         }
         return self::$twig;
     }
+    public static function getRequest()
+    {
+        return self::$request;
+    }
     
+    public static function setRequest(Request $request)
+    {
+        self::$request = $request;
+    }
 }

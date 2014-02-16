@@ -4,11 +4,9 @@ class Transaction
    private $dbh;
    private $stmts = array();
    
-   public function __construct($dbh)
+   public function __construct()
    {
-       if ( is_null($dbh) ) {
-           throw new Exception("Dbh не задан");
-       }
+       $dbh = AppHelper::instance()->getConnection();
        $this->dbh=$dbh;
    }
    

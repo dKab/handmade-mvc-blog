@@ -2,17 +2,36 @@
 <html>
     <head>
         <title>
-{% block title %}
-{% endblock %} - Алёнин блог
+{% block title title|default('Привет!') %}
+- Алёнин блог
         </title>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width">
+        <style type="text/css">
+            #nav li {
+                display: inline;
+            }
+        </style>
     </head>
     <body>
-        <div>
+        <div id="nav">
+                <ul style="list-style: none">
+                    {% if user is defined and user is not empty %}
+                        <li><a href="addpost">Добавить запись</a></li> | 
+                        <li><a href="manageposts">Управление записями</a></li> | 
+                        <li><a href="logout">Выход</a></li>
+                    {% else %}
+                        <li><a href="/site/login">Вход</a></li>
+                    {% endif %}
+                </ul>
+        </div>
+        <div id="content">
+            Приветствую вас в своём уберкрутом блоге!
             {% block content %}
-            Приветствую вас в моём крутейшем блоге!!
             {% endblock %}
+        </div>
+        <div id="sidebar">
+         </div>
         </div>
     </body>
 </html>

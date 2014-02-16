@@ -21,9 +21,17 @@ class Application
     private function handleRequest()
     {
         $request = new Request();
-        $controller = new Controller();
-        $action = $controller->getAction($request);
-        $action->execute($request);
+        $dispatcher = new Dispatcher();
+        try {
+            $controller = $dispatcher->getController($request);
+            $action = $dispatcher->getAction($request);
+            $controller->execute($action);  
+        } catch (NotFoundException $ex) {
+                header('HTTP/1.0 404 Not Found');
+                echo "<h1>404 Not Found</h1>";
+                echo "The page that you have requested could not be found.";
+                exit();
+        } 
     }
 }
 

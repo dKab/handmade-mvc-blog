@@ -1,11 +1,11 @@
 <?php
 class Dispatcher
 {
-    private static $indexController;
+    private static $defaultController;
     
     public function __construct()
     {
-        self::$indexController = new SiteController();
+        self::$defaultController = new IndexController();
     }
     
     public function getController(Request $request)
@@ -16,7 +16,7 @@ class Dispatcher
         }
         $sep = DIRECTORY_SEPARATOR;
         if ( ! isset($controller) ) {
-            return self::$indexController;
+            return self::$defaultController;
         }
         $classname=  ucfirst($controller) . "Controller";
         $filepath="protected{$sep}controllers{$sep}" . $classname . ".php";

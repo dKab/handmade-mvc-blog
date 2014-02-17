@@ -2,6 +2,7 @@
 class Request
 {
     private $properties;
+    private $requestURI;
     private $feedback = array();
     
     public function __construct() {
@@ -13,12 +14,13 @@ class Request
     {
         if (isset( $_SERVER['REQUEST_METHOD'] ) ) {
             $this->properties = $_REQUEST;
-            $this->setProperty('REQUEST_URI', $_SERVER['REQUEST_URI']);
+           // $this->setProperty('REQUEST_URI', $_SERVER['REQUEST_URI']);
+            $this->requestURI = $_SERVER['REQUEST_URI'];
             return;
         }
         //TODO may add console args if there launched in batch mode
     }
-    
+    /*
     public function getProperty($key)
     {
         if (isset($this->properties[$key])) {
@@ -41,11 +43,12 @@ class Request
     {
         return $this->feedback;
     }
-    
+    */
     public function getRoute()
     {
         $route = array();
-        $parts = explode("/", $this->getProperty('REQUEST_URI'));
+        //$parts = explode("/", $this->getProperty('REQUEST_URI'));
+        $parts = explode("/", $this->requestURI);
         for ($i=1; $i< min(count($parts), 3); $i++) {
             if ( ! empty($parts[$i])) {
                 $parts[$i] = str_replace(array(".", "\\"), "", $parts[$i]);

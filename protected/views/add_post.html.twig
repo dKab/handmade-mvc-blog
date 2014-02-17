@@ -1,0 +1,23 @@
+{% extends "main.html.twig" %}    
+
+{% block content %}
+<h1>Новая запись</h1>
+    <form method="POST" action="admin/store">
+        <label for="title">Заголовок:</label><br />
+        <input type="text" name="title" size="68"></input><br />
+        <label for="body">Содержимое:</label><br />
+        <textarea cols="59" rows="25" name="body"></textarea><br />
+        <label for="tags">Тэги через запятую</label><br />
+        <input type="text" name="tags" size="68"></input><br />
+        <label for="status">Пометить как:</label>
+        <select name="status">
+            <option value="{{ constant('PostManager::DRAFT') }}">Черновик</option>
+            <option value="{{ constant('PostManager::PUBLISHED') }}">Опубликован</option>
+            <option value="{{ constant('PostManager::ARCHIVE') }}">Устарел</option>
+        </select><br />
+        <input type="submit" value="Отправить"></input>
+    </form>
+
+{% import 'login.html.twig' as login %}
+{{ login.feedback() }}
+{% endblock %}

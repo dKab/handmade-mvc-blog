@@ -5,13 +5,13 @@ abstract class Controller
             
     final public function __construct() { }
     
-    final public function execute($action=null)
+    public function execute($action=null)
     {
         if ( $action ) {
             if ( method_exists($this, $action) ) {
                 return $this->$action();
             } else {
-                throw new NotFoundExceptionException("couldn't found requested action");
+                throw new NotFoundException("couldn't found requested action" . $action);
             }
             
         } else {
@@ -20,6 +20,35 @@ abstract class Controller
     }
     
     abstract protected function indexAction();
+    
+    final protected function getFeedback()
+    {
+        //session_start();
+        $data = array();
+        if ($this instanceof AdminController) {
+           $data['user'] = $_SESSION['user'];
+        }
+        if ( isset($_SESSION['feedback']) ) {
+            $data['feedback'] = $_SESSION['feedback'];
+            unset($_SESSION['feedback']);
+        }
+        return $data;
+    }
+    
+    final protected function isFilled(Array $required)
+    {
+        $empty = array();
+        foreach($required as $field) {
+          if ( empty($_REQUEST[$field]) ) {
+            $empty[]=$field;
+          }
+        }
+        if ( ! empty($empty) ) {
+          return false;
+        } else {
+            return true;
+        }
+    }
     /*
      * don't need it if we use Twig
     protected function render($view, array $data, $layout=null)

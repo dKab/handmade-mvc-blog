@@ -17,11 +17,11 @@
         <div id="nav">
                 <ul style="list-style: none">
                     {% if user is defined and user is not empty %}
-                        <li><a href="addpost">Добавить запись</a></li> | 
+                        <li><a href="/admin/add">Добавить запись</a></li> | 
                         <li><a href="manageposts">Управление записями</a></li> | 
-                        <li><a href="logout">Выход</a></li>
+                        <li><a href="/admin/logout">Выход</a></li>
                     {% else %}
-                        <li><a href="/site/login">Вход</a></li>
+                        <li><a href="/index/login">Вход</a></li>
                     {% endif %}
                 </ul>
         </div>

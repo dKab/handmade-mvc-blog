@@ -5,7 +5,7 @@ class IndexController extends Controller
     {
         $model = new PostManager();
         $posts = $model->getPublished();
-        echo AppHelper::twig()->render("posts.html.twig", array( 
+        $this->render("posts.html.twig", array( 
             'title'=>'Все записи',
             'posts'=>$posts,
             ));
@@ -13,15 +13,13 @@ class IndexController extends Controller
     
     protected function loginAction()
     {
-        session_start();
-        $data = $this->getFeedback();
-        $data['title'] = 'Вход';
-        echo AppHelper::twig()->render('login.html.twig', $data);
+        $this->render('login.html.twig', array(
+            'title'=>'Вход',
+        ));
     }
     
     protected function authAction()
     {
-        session_start();
         $model= new PostManager();
         $guard = new AuthManager();
         
@@ -32,9 +30,6 @@ class IndexController extends Controller
             header("Location: /index/login");
             exit();
         }
-        //echo "<pre>";
-        //var_dump($_REQUEST);
-       // echo "</pre>";
         $name = $_POST['name'];
         $password = $_POST['password'];
         $user = $guard->login(array(

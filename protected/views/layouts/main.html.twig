@@ -29,6 +29,10 @@
             Приветствую вас в своём уберкрутом блоге!
             {% block content %}
             {% endblock %}
+            
+            {% if feedback is defined %}
+            {{ feedback }}
+            {% endif %}
         </div>
         <div id="sidebar">
          </div>

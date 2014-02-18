@@ -6,17 +6,16 @@ class AdminController extends Controller
     {
         $model = new PostManager();
         $posts = $model->getAllPosts();
-        echo AppHelper::twig()->render("posts.html.twig", array( 
+        $this->render("posts.html.twig", array( 
             'title'=>'Все записи',
             'posts'=>$posts,
-            'user'=>true,
             ));
     }
     
-    public function execute($action=null)
+    public function doExecute($action=null)
     {
         if ( $this->isAdmin() ) {
-            parent::execute($action);
+            parent::doExecute($action);
         } else {
             header('Location: /site/login/');
             exit();
@@ -25,7 +24,6 @@ class AdminController extends Controller
     
     private function isAdmin()
     {
-        session_start();
         if ( isset($_SESSION['user']) ) {
             return true;    
         } else { return false; }
@@ -33,7 +31,6 @@ class AdminController extends Controller
     
     protected function logoutAction()
     {
-        //session_start();
         unset($_SESSION['user']);
         header('Location: /');
         exit();
@@ -41,14 +38,39 @@ class AdminController extends Controller
     
     protected function addAction()
     {
-        $data = $this->getFeedback();
-        $data['title'] = 'Новая запись';
-        echo AppHelper::twig()->render('add_post.html.twig', $data);
+        $this->render('add_post.html.twig', array(
+            'title'=>'Новая запись',
+        ));
     }
     
     protected function storeAction()
-    {
-        
-        
+    {   
+        if ( ! $this->isFilled( array('title', 'body', 'status') ) ) {
+                $_SESSION['feedback'] = "Поля, помеченные звёздочкой должны быть заполнены";
+                header("Location: /admin/add/");
+                exit();
+        }
+        $trusty = filter_input_array(INPUT_POST , array(
+                'status'=>array(
+                    'filter'=>FILTER_VALIDATE_INT,
+                    'options'=>array('min_range' => 1, 'max_range' => 3, 'default'=>2)
+                ),
+                'tags'=>array(
+                    'filter'=>FILTER_CALLBACK,
+                    'options'=>function($value) {
+                           $tags = explode(",", $value);
+                           $valid = array();
+                           foreach( $tags as $tag) {
+                               $tag = trim($tag);
+                               if ( empty($tag) ) { continue; }
+                               else {
+                                   $valid[] = $tag;
+                               }
+                           }    
+                           return $valid;
+                       },
+                )));
+         $input = array_merge($_POST, $trusty);
+         var_dump($input);
     }
 }

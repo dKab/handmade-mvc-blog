@@ -5,7 +5,7 @@ abstract class Controller
             
     final public function __construct() { }
     
-    public function execute($action=null)
+    protected function doExecute($action=null)
     {
         if ( $action ) {
             if ( method_exists($this, $action) ) {
@@ -19,11 +19,21 @@ abstract class Controller
         }
     }
     
+    protected function prepare()
+    {
+        session_start();
+        return $this;
+    }
+    
+    public function execute($action)
+    {
+        $this->prepare()->doExecute($action);
+    }
+    
     abstract protected function indexAction();
     
     final protected function getFeedback()
     {
-        //session_start();
         $data = array();
         if ($this instanceof AdminController) {
            $data['user'] = $_SESSION['user'];
@@ -37,18 +47,28 @@ abstract class Controller
     
     final protected function isFilled(Array $required)
     {
-        $empty = array();
         foreach($required as $field) {
-          if ( empty($_REQUEST[$field]) ) {
-            $empty[]=$field;
+            $val = trim($_REQUEST[$field]);
+          if ( empty($val) ) {
+           return false;
           }
         }
-        if ( ! empty($empty) ) {
-          return false;
-        } else {
-            return true;
-        }
+        return true;
     }
+    
+    protected function render($template, $data=null)
+    {
+        $essential = $this->getFeedback();
+        if ( is_array($data) ) {
+            $data = array_merge($data, $essential);
+        } elseif ( is_null($data) ) {
+            $data = $essential;
+        } else {
+            throw new Exception("Argument 2 passed to method" . __CLASS__ . "::render() isn't array! Array expected");
+        }
+        echo AppHelper::twig()->render($template, $data);
+    }
+    
     /*
      * don't need it if we use Twig
     protected function render($view, array $data, $layout=null)

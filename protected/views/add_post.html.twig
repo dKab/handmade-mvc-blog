@@ -2,7 +2,7 @@
 
 {% block content %}
 <h1>Новая запись</h1>
-    <form method="POST" action="admin/store">
+    <form method="POST" action="/admin/store">
         <label for="title">Заголовок:</label><br />
         <input type="text" name="title" size="68"></input><br />
         <label for="body">Содержимое:</label><br />
@@ -17,7 +17,4 @@
         </select><br />
         <input type="submit" value="Отправить"></input>
     </form>
-
-{% import 'login.html.twig' as login %}
-{{ login.feedback() }}
 {% endblock %}

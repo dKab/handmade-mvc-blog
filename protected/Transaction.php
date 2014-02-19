@@ -1,8 +1,15 @@
 <?php
 class Transaction
 {
-   private $dbh;
-   private $stmts = array();
+   protected $dbh;
+   protected $stmts = array();
+   
+   protected $error;
+   
+   public function getError()
+   {
+       return $this->error;
+   }
    
    public function __construct()
    {

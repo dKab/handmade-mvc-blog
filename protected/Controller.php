@@ -2,7 +2,9 @@
 abstract class Controller
 {
     // protected $layout="main"; uncomment this line if don't use any template engine 
-            
+    
+    protected $data=array();
+    
     final public function __construct() { }
     
     protected function doExecute($action=null)
@@ -32,17 +34,20 @@ abstract class Controller
     
     abstract protected function indexAction();
     
-    final protected function getFeedback()
+    protected function getFeedback()
     {
-        $data = array();
+        //$data = array();
+        /*
         if ($this instanceof AdminController) {
-           $data['user'] = $_SESSION['user'];
+           $this->data['user'] = $_SESSION['user'];
         }
+         * 
+         */
         if ( isset($_SESSION['feedback']) ) {
-            $data['feedback'] = $_SESSION['feedback'];
+            $this->data['feedback'] = $_SESSION['feedback'];
             unset($_SESSION['feedback']);
         }
-        return $data;
+        return $this->data;
     }
     
     final protected function isFilled(Array $required)

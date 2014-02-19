@@ -12,6 +12,11 @@ class AdminController extends Controller
             ));
     }
     
+    protected function getFeedback() {
+        $this->data['user'] = $_SESSION['user'];
+        return parent::getFeedback();
+    }
+    
     public function doExecute($action=null)
     {
         if ( $this->isAdmin() ) {
@@ -67,10 +72,22 @@ class AdminController extends Controller
                                    $valid[] = $tag;
                                }
                            }    
-                           return $valid;
+                           return array_unique($valid);
                        },
                 )));
          $input = array_merge($_POST, $trusty);
-         var_dump($input);
+         $input['user'] = $_SESSION['user'];
+         //var_dump($input);
+         $model = new PostManager();
+         $id = $model->addPost($input);
+         if ( ! $id ) {
+             $_SESSION['feedback'] = $model->getError();
+             header("Location: /admin/add/");
+             exit();
+         } else {
+             echo "success!!";
+         }
     }
+    
+    
 }

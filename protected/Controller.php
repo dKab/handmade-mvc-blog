@@ -69,9 +69,24 @@ abstract class Controller
         } elseif ( is_null($data) ) {
             $data = $essential;
         } else {
-            throw new Exception("Argument 2 passed to method" . __CLASS__ . "::render() isn't array! Array expected");
+            throw new Exception("Argument 2 passed to method" . __CLASS__ . "::render isn't array! Array expected");
         }
         echo AppHelper::twig()->render($template, $data);
+    }
+    
+    protected function viewAction()
+    {
+        $id = filter_input(INPUT_GET, "id", FILTER_VALIDATE_INT);
+        //var_dump($id);
+        //exit();
+        $model = new PostManager();
+        $post = $model->getPost($id);
+        if ( ! $post ) {
+           // throw new NotFoundException("couldn't found requested post" . $id);
+            echo "not found!";
+        }
+        $this->render('post.html.twig', array(
+            'post'=>$post));
     }
     
     /*

@@ -52,7 +52,10 @@ class Request
         for ($i=1; $i< min(count($parts), 3); $i++) {
             if ( ! empty($parts[$i])) {
                 $parts[$i] = str_replace(array(".", "\\"), "", $parts[$i]);
-                $parts[$i] = preg_replace("/(\\w)\\?.*/ui", "{1}", $parts[$i]);
+                if (mb_strpos($parts[$i], "?")) {
+                    $parts[$i] = mb_substr($parts[$i], 0, mb_strpos($parts[$i], "?"));
+                }
+                //$parts[$i] = preg_replace("/(\\w)\\?.*/ui", "{1}", $parts[$i]);
                 $route[] = $parts[$i];
             }
         }

@@ -85,7 +85,9 @@ class AdminController extends Controller
              header("Location: /admin/add/");
              exit();
          } else {
-             echo "success!!";
+             //render
+             //echo "success!!";
+             header("Location: /admin/view?id={$id}");
          }
     }
     

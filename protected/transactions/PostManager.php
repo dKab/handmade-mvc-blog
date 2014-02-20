@@ -44,6 +44,26 @@ class PostManager extends Transaction {
     
     private static $linkTag = "INSERT INTO post_tag VALUES(:post, :tag)";
     
+    private static $getPostsWithTheirTags = "SELECT p.*, GROUP_CONCAT(t.name SEPARATOR ', ') as tags
+                                            FROM posts p JOIN post_tag pt
+                                            ON p.id=pt.post_id JOIN tags t
+                                            ON pt.tag_id = t.id
+                                            GROUP BY p.id";
+    
+    private static $findPostsByTag = "SELECT p.id, GROUP_CONCAT(t.name SEPARATOR ', ') as tags FROM
+                                      posts p JOIN post_tag p2t ON p.id=p2t.post_id JOIN tags t 
+                                      ON p2t.tag_id=t.id WHERE p.id IN 
+                                      (SELECT p.id FROM posts p JOIN post_tag pt 
+                                      ON p.id=pt.post_id JOIN tags t 
+                                      ON pt.tag_id=t.id WHERE t.name = :name) GROUP BY p.id";
+    
+    private static $findPost = "SELECT * FROM posts WHERE id=:id";
+    
+    private static $getTags = "SELECT t.name FROM tags t
+                               JOIN post_tag p2t ON t.id=p2t.tag_id
+                               JOIN posts p ON p2t.post_id=p.id WHERE p.id=:id";
+    private static $getComments = "";
+    
     public function getAllPosts()
     {
         $ret = array();
@@ -51,6 +71,7 @@ class PostManager extends Transaction {
         $posts = $sth->fetchAll(PDO::FETCH_ASSOC);
         return $posts;
     }
+    
     public function getPublished()
     {
         $ret = array();
@@ -111,4 +132,20 @@ class PostManager extends Transaction {
             return false;
         }    
     }
+    
+    public function getPost($id)
+    {
+        $sth=$this->doStatement(self::$findPost, array('id'=>$id));
+        if ( $found = $sth->fetch(PDO::FETCH_ASSOC) ) {
+            $sth=$this->doStatement(self::$getTags, array('id'=>$found['id']));
+            $tags=$sth->fetchAll(PDO::FETCH_COLUMN);
+            if ($tags) {
+                $found['tags']=$tags;
+                return $found;
+            }
+        } else { 
+            throw new Exception("Нет такого поста");
+        }
+    }
+    
 }

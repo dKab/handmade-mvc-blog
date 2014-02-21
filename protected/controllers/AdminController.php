@@ -4,12 +4,18 @@ class AdminController extends Controller
 {
     protected function indexAction()
     {
+        return $this->listAction();
+    }
+    
+    protected function listAction()
+    {
+        
         $model = new PostManager();
         $posts = $model->getAllPosts();
         $this->render("posts.html.twig", array( 
             'title'=>'Все записи',
             'posts'=>$posts,
-            ));
+            )); 
     }
     
     protected function getFeedback() {

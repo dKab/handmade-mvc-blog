@@ -1,3 +1,8 @@
+{% if user is defined %}
+  {% set controller = 'admin' %}
+{% else %}
+  {% set controller = 'index' %}
+{% endif %}
 <!DOCTYPE html>
 <html>
     <head>
@@ -16,7 +21,8 @@
     <body>
         <div id="nav">
                 <ul style="list-style: none">
-                    {% if user is defined and user is not empty %}
+                    <li><a href="{{ "/" ~ controller }}">Все записи</a></li> | 
+                    {% if user is defined %}
                         <li><a href="/admin/add">Добавить запись</a></li> | 
                         <li><a href="manageposts">Управление записями</a></li> | 
                         <li><a href="/admin/logout">Выход</a></li>
@@ -26,7 +32,14 @@
                 </ul>
         </div>
         <div id="content">
+            {% if user is not defined %}
             Приветствую вас в своём уберкрутом блоге!
+            {% endif %}
+            
+            {% if header is defined %}
+                <h2>{{ header }}</h2>
+            {% endif %}
+                
             {% block content %}
             {% endblock %}
             

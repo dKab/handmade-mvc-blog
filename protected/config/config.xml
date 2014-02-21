@@ -6,4 +6,7 @@
         <user>blog_user</user>
         <password>12345</password>
     </db>
+    <post>
+        <cut>#cut#</cut>
+    </post>
 </root>

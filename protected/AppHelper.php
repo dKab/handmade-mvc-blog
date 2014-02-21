@@ -55,6 +55,11 @@ class AppHelper {
         return $this->connection;   
     }
     
+    public function getCutTag()
+    {
+        return $this->options->post->cut;
+    }
+    
     public static function twig()
     {   
         $templateDir = "protected/views";

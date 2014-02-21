@@ -11,19 +11,21 @@ class PostManager extends Transaction {
     const PUBLISHED = 2;
     const ARCHIVE = 3;
     
+    /*
     private static $findByStatus = "SELECT * FROM posts
            WHERE status =
            :status
            ORDER BY create_time DESC";
-    
+    */
+    /*
     private static $getAll = "SELECT posts.*, lookup.name, lookup.position
             FROM posts JOIN lookup ON posts.status = lookup.code
             WHERE lookup.type = 'Post type'
             ORDER BY lookup.position asc, posts.create_time desc";
-    
+    */
     private static $addPost = 'INSERT INTO posts
-        (author, title, body, create_time, edit_time, status)
-        VALUES(:author, :title, :body, NOW(), NOW(), :status)';
+        (author, title, begining, ending, create_time, edit_time, status)
+        VALUES(:author, :title, :begining, :ending, NOW(), NOW(), :status)';
     
     private static $insertTag = "INSERT INTO tags (name, frequency) VALUES(:name, 1)";
     
@@ -44,18 +46,27 @@ class PostManager extends Transaction {
     
     private static $linkTag = "INSERT INTO post_tag VALUES(:post, :tag)";
     
-    private static $getPostsWithTheirTags = "SELECT p.*, GROUP_CONCAT(t.name SEPARATOR ', ') as tags
+    private static $findByStatus = "SELECT p.id, p.title, p.create_time, p.edit_time, p.status, p.begining,
+                                            GROUP_CONCAT(DISTINCT t.name SEPARATOR ', ') as tags
                                             FROM posts p JOIN post_tag pt
                                             ON p.id=pt.post_id JOIN tags t
-                                            ON pt.tag_id = t.id
-                                            GROUP BY p.id";
+                                            ON pt.tag_id = t.id WHERE p.status=:status
+                                            GROUP BY p.id ORDER BY create_time desc";
     
-    private static $findPostsByTag = "SELECT p.id, GROUP_CONCAT(t.name SEPARATOR ', ') as tags FROM
+    private static $getAll = "SELECT p2l.id, p2l.title, p2l.create_time, p2l.edit_time, p2l.status, p2l.begining, p2l.name,  GROUP_CONCAT(DISTINCT t.name SEPARATOR ', ') as tags
+                                            FROM (SELECT posts.*, lookup.name, lookup.position
+                                            FROM posts JOIN lookup ON posts.status = lookup.code) as p2l 
+                                            JOIN post_tag pt
+                                            ON p2l.id=pt.post_id JOIN tags t
+                                            ON pt.tag_id = t.id
+                                            GROUP BY p2l.id ORDER BY p2l.status, p2l.create_time desc";
+    
+    private static $findPostsByTag = "SELECT p.id, p.title, p.create_time, p.edit_time, p.status, p.begining, GROUP_CONCAT(DISTINCT t.name SEPARATOR ', ') as tags FROM
                                       posts p JOIN post_tag p2t ON p.id=p2t.post_id JOIN tags t 
                                       ON p2t.tag_id=t.id WHERE p.id IN 
                                       (SELECT p.id FROM posts p JOIN post_tag pt 
                                       ON p.id=pt.post_id JOIN tags t 
-                                      ON pt.tag_id=t.id WHERE t.name = :name) GROUP BY p.id";
+                                      ON pt.tag_id=t.id WHERE t.name = :name) GROUP BY p.id ORDER BY p.create_time desc";
     
     private static $findPost = "SELECT * FROM posts WHERE id=:id";
     
@@ -64,12 +75,30 @@ class PostManager extends Transaction {
                                JOIN posts p ON p2t.post_id=p.id WHERE p.id=:id";
     private static $getComments = "";
     
+    private function explodeTags(Array $posts)
+    {
+        foreach ($posts as $key=>$val) {
+            $tags = explode(", ", $val['tags']);
+            $posts[$key]['tags'] = $tags;
+        }
+        return $posts;
+    }
+    
+    public function hasTag($tag)
+    {
+        $sth = $this->doStatement(self::$findPostsByTag, array(
+            'name'=>$tag,
+        ));
+        $related = $sth->fetchAll(PDO::FETCH_ASSOC);
+        return $this->explodeTags($related);
+    }
+    
     public function getAllPosts()
     {
         $ret = array();
         $sth = $this->doStatement(self::$getAll);
         $posts = $sth->fetchAll(PDO::FETCH_ASSOC);
-        return $posts;
+        return $this->explodeTags($posts);
     }
     
     public function getPublished()
@@ -79,18 +108,27 @@ class PostManager extends Transaction {
             'status'=>self::PUBLISHED
                 ));
         $posts = $sth->fetchAll(PDO::FETCH_ASSOC);
-        return $posts;
+        return $this->explodeTags($posts);
     }
     
     public function addPost($input)
     {
         extract($input);
+        $cutTag = AppHelper::instance()->getCutTag();
+        if ( $cut = mb_strpos($body,$cutTag) ) {
+            list($begining, $ending) = explode($cutTag, $body);
+        } else {
+            $begining = $body;
+            $ending = "";
+        }
         try {
         $this->dbh->beginTransaction();
         $sth=$this->doStatement(self::$addPost, array(
             'author'=>$user,
             'title'=>$title,
-            'body'=>$body,
+            //'body'=>$body,
+            'begining'=>$begining,
+            'ending'=>$ending,
             'status'=>$status
         ));
         if ( ! $postId=$this->dbh->lastInsertId() ) {

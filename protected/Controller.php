@@ -33,7 +33,7 @@ abstract class Controller
     }
     
     abstract protected function indexAction();
-    
+
     protected function getFeedback()
     {
         //$data = array();
@@ -87,8 +87,7 @@ abstract class Controller
         }
         $this->render('post.html.twig', array(
             'post'=>$post));
-    }
-    
+    }    
     /*
      * don't need it if we use Twig
     protected function render($view, array $data, $layout=null)

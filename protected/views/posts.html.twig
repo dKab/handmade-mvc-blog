@@ -11,7 +11,11 @@
                 {% endif %}
                        Опубликовано: 
                             {{ post.create_time }} <br />
-                 {{ post.body|nl2br }}
+                 {{ post.begining|nl2br }}...
+                 <a href="{{ "/" ~ controller ~ "/view?id=" ~ post.id }}">(показать полностью)</a><br />
+                    Тэги: {% for tag in post.tags %}
+                              <a href="{{ "/" ~ controller ~ "/list?tag=" ~ tag }}">{{ tag }}</a> 
+                          {% endfor %}
             </li>
             <br /><hr />
     {% endfor %}

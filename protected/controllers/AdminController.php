@@ -154,6 +154,7 @@ class AdminController extends Controller
             'curURL'=>$route,
             'posts'=>$posts,
             'query'=>$query,
+            'status'=>$status,
         ));
         
         /*

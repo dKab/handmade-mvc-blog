@@ -11,6 +11,7 @@ class PostManager extends Transaction {
     const PUBLISHED = 2;
     const ARCHIVE = 3;
     
+    
     /*
     private static $findByStatus = "SELECT * FROM posts
            WHERE status =
@@ -60,27 +61,35 @@ class PostManager extends Transaction {
     
     private static $getAll = "SELECT p2l.id, p2l.title, p2l.create_time, p2l.edit_time, p2l.status, p2l.begining, p2l.name,  GROUP_CONCAT(DISTINCT t.name SEPARATOR ', ') as tags
                                             FROM (SELECT posts.*, lookup.name, lookup.position
-                                            FROM posts JOIN lookup ON posts.status = lookup.code) as p2l 
+                                            FROM posts JOIN lookup ON posts.status = lookup.code
+                                                        WHERE lookup.type = 'Post type') as p2l 
                                             JOIN post_tag pt
                                             ON p2l.id=pt.post_id JOIN tags t
                                             ON pt.tag_id = t.id
                                             GROUP BY p2l.id ORDER BY p2l.status, p2l.create_time desc";
     
-    private static $findPostsByTagAndStatus = "SELECT p.id, p.title, p.create_time, p.edit_time, p.status, p.begining, GROUP_CONCAT(DISTINCT t.name SEPARATOR ', ') as tags FROM
-                                      posts p JOIN post_tag p2t ON p.id=p2t.post_id JOIN tags t 
-                                      ON p2t.tag_id=t.id WHERE p.id IN 
+    private static $findPostsByTagAndStatus = "
+SELECT p.id, p.title, p.create_time, p.edit_time, p.status, p.begining, GROUP_CONCAT(DISTINCT t.name SEPARATOR ', ') as tags FROM
+posts p JOIN post_tag p2t ON p.id=p2t.post_id JOIN tags t
+ON p2t.tag_id=t.id WHERE p.id IN
+(SELECT p.id FROM posts p JOIN post_tag pt
+ON p.id=pt.post_id JOIN tags t
+ON pt.tag_id=t.id WHERE t.name = :tag AND p.status= :status) GROUP BY p.id ORDER BY p.create_time desc";
+    
+   private static $findPostsByTag = "SELECT p2l.id, p2l.title, p2l.create_time, p2l.edit_time, p2l.status, 
+                                     p2l.begining, p2l.name, GROUP_CONCAT(DISTINCT t.name SEPARATOR ', ') as tags FROM
+                                      (SELECT posts.*, lookup.name, lookup.position
+                                            FROM posts JOIN lookup ON posts.status = lookup.code
+                                                        WHERE lookup.type = 'Post type') as p2l
+                                            JOIN post_tag p2t ON p2l.id=p2t.post_id JOIN tags t 
+                                      ON p2t.tag_id=t.id WHERE p2l.id IN 
                                       (SELECT p.id FROM posts p JOIN post_tag pt 
                                       ON p.id=pt.post_id JOIN tags t 
-                                      ON pt.tag_id=t.id WHERE t.name = :name AND p.status=:status) GROUP BY p.id ORDER BY p.create_time desc";
+                                      ON pt.tag_id=t.id WHERE t.name = :tag) GROUP BY p2l.id ORDER BY p2l.status asc, p2l.create_time desc";
     
-   private static $findPostsByTag = "SELECT p.id, p.title, p.create_time, p.edit_time, p.status, p.begining, GROUP_CONCAT(DISTINCT t.name SEPARATOR ', ') as tags FROM
-                                      posts p JOIN post_tag p2t ON p.id=p2t.post_id JOIN tags t 
-                                      ON p2t.tag_id=t.id WHERE p.id IN 
-                                      (SELECT p.id FROM posts p JOIN post_tag pt 
-                                      ON p.id=pt.post_id JOIN tags t 
-                                      ON pt.tag_id=t.id WHERE t.name = :name) GROUP BY p.id ORDER BY p.create_time desc";
-    
-    private static $findPost = "SELECT * FROM posts WHERE id=:id";
+    private static $findPost = "SELECT p.*, l.name as name FROM posts p JOIN lookup l ON
+                                  p.status = l.code WHERE l.type = 'Post type'  
+                                  AND p.id=:id";
     
     private static $getTags = "SELECT t.name FROM tags t
                                JOIN post_tag p2t ON t.id=p2t.tag_id
@@ -105,12 +114,12 @@ class PostManager extends Transaction {
     {
         if ( $status ) {
             $sth = $this->doStatement(self::$findPostsByTagAndStatus, array(
-                'name'=>$tag,
+                'tag'=>$tag,
                 'status'=>$status,
             ));
         } else {
             $sth=$this->doStatement(self::$findPostsByTag, array(
-                'name'=>$tag
+                'tag'=>$tag
                 ));
         }
         $related = $sth->fetchAll(PDO::FETCH_ASSOC);

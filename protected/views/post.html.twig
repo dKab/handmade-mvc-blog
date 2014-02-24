@@ -3,8 +3,10 @@
 {% block title post.title %}
 
 {% block content %}
-<h1> {{ post.title }} </h1>
-
+    {% if user is defined %}
+        Статус: {{ post.name }}
+        <br />
+    {% endif %}
 {{ post.begining|nl2br }}
 {{ post.ending|nl2br }}
 <br />

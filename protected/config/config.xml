@@ -9,4 +9,7 @@
     <post>
         <cut>#cut#</cut>
     </post>
+    <pagination>
+        <limit>10</limit>
+    </pagination>
 </root>

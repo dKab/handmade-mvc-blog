@@ -8,20 +8,20 @@ class IndexController extends Controller
     
     protected function listAction()
     {
-        $params = array();
         //$tag = AppHelper::instance()->getRequest()->properties['tag'];
         $tag = filter_input(INPUT_GET, "tag", FILTER_SANITIZE_STRING);
         $model = new PostManager();
         if ( $tag ) {  
-            $posts = $model->hasTag($tag);
-            $title = "Записи с тэгом {$tag}";
-            $params['header'] = $title;
+            $posts = $model->hasTag($tag, PostManager::PUBLISHED);
+            $title = "Записи с тэгом '{$tag}'";
         } else {
             $posts = $model->getPublished();
             $title = "Все записи";
         }
-        list($params['title'], $params['posts']) = array($title, $posts);
-        $this->render("posts.html.twig", $params); 
+        $this->render("posts.html.twig", array(
+            'posts'=>$posts,
+            'title'=>$title,
+        )); 
     }
     
     protected function loginAction()

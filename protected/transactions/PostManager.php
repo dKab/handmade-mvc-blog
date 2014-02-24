@@ -17,12 +17,17 @@ class PostManager extends Transaction {
            :status
            ORDER BY create_time DESC";
     */
-    /*
-    private static $getAll = "SELECT posts.*, lookup.name, lookup.position
-            FROM posts JOIN lookup ON posts.status = lookup.code
+ 
+    private static $getShallow = "SELECT p.id, p.title, p.create_time, p.edit_time, p.status, lookup.name, lookup.position
+            FROM posts  p JOIN lookup ON p.status = lookup.code
             WHERE lookup.type = 'Post type'
-            ORDER BY lookup.position asc, posts.create_time desc";
-    */
+            ORDER BY lookup.position asc, p.create_time desc";
+    
+    private static $getSelectivelyShallow = "SELECT p.id, p.title, p.create_time, p.edit_time, p.status, lookup.name, lookup.position
+            FROM posts  p JOIN lookup ON p.status = lookup.code
+            WHERE lookup.type = 'Post type' AND p.status=:status
+            ORDER BY lookup.position asc, p.create_time desc";
+   
     private static $addPost = 'INSERT INTO posts
         (author, title, begining, ending, create_time, edit_time, status)
         VALUES(:author, :title, :begining, :ending, NOW(), NOW(), :status)';
@@ -61,7 +66,14 @@ class PostManager extends Transaction {
                                             ON pt.tag_id = t.id
                                             GROUP BY p2l.id ORDER BY p2l.status, p2l.create_time desc";
     
-    private static $findPostsByTag = "SELECT p.id, p.title, p.create_time, p.edit_time, p.status, p.begining, GROUP_CONCAT(DISTINCT t.name SEPARATOR ', ') as tags FROM
+    private static $findPostsByTagAndStatus = "SELECT p.id, p.title, p.create_time, p.edit_time, p.status, p.begining, GROUP_CONCAT(DISTINCT t.name SEPARATOR ', ') as tags FROM
+                                      posts p JOIN post_tag p2t ON p.id=p2t.post_id JOIN tags t 
+                                      ON p2t.tag_id=t.id WHERE p.id IN 
+                                      (SELECT p.id FROM posts p JOIN post_tag pt 
+                                      ON p.id=pt.post_id JOIN tags t 
+                                      ON pt.tag_id=t.id WHERE t.name = :name AND p.status=:status) GROUP BY p.id ORDER BY p.create_time desc";
+    
+   private static $findPostsByTag = "SELECT p.id, p.title, p.create_time, p.edit_time, p.status, p.begining, GROUP_CONCAT(DISTINCT t.name SEPARATOR ', ') as tags FROM
                                       posts p JOIN post_tag p2t ON p.id=p2t.post_id JOIN tags t 
                                       ON p2t.tag_id=t.id WHERE p.id IN 
                                       (SELECT p.id FROM posts p JOIN post_tag pt 
@@ -75,6 +87,11 @@ class PostManager extends Transaction {
                                JOIN posts p ON p2t.post_id=p.id WHERE p.id=:id";
     private static $getComments = "";
     
+    private static $countTotal = "SELECT COUNT(*) as total FROM posts";
+    private static $countOnly ="SELECT COUNT(*) as total FROM posts WHERE status = :status";
+    
+    
+    
     private function explodeTags(Array $posts)
     {
         foreach ($posts as $key=>$val) {
@@ -84,11 +101,18 @@ class PostManager extends Transaction {
         return $posts;
     }
     
-    public function hasTag($tag)
+    public function hasTag($tag, $status=null)
     {
-        $sth = $this->doStatement(self::$findPostsByTag, array(
-            'name'=>$tag,
-        ));
+        if ( $status ) {
+            $sth = $this->doStatement(self::$findPostsByTagAndStatus, array(
+                'name'=>$tag,
+                'status'=>$status,
+            ));
+        } else {
+            $sth=$this->doStatement(self::$findPostsByTag, array(
+                'name'=>$tag
+                ));
+        }
         $related = $sth->fetchAll(PDO::FETCH_ASSOC);
         return $this->explodeTags($related);
     }
@@ -109,6 +133,13 @@ class PostManager extends Transaction {
                 ));
         $posts = $sth->fetchAll(PDO::FETCH_ASSOC);
         return $this->explodeTags($posts);
+    }
+    
+    public function getShallow()
+    {
+        $sth = $this->doStatement(self::$getShallow);
+        $posts = $sth->fetchAll(PDO::FETCH_ASSOC);
+        return $posts;
     }
     
     public function addPost($input)
@@ -184,6 +215,30 @@ class PostManager extends Transaction {
         } else { 
             throw new Exception("Нет такого поста");
         }
+    }
+    
+    public function countTotal($status=null)
+    {
+        if ( ! $status ) {
+            return $this->doStatement(self::$countTotal)->fetchColumn();
+        } else {
+            return $this->doStatement(self::$countOnly, array('status'=>$status))
+                ->fetchColumn();
+        }
+    }
+    
+    public function getPartial($offset, $limit, $status=null)
+    {
+        $limitClause = " LIMIT {$offset}, {$limit}";
+        if ( ! $status ) {
+            $stmt=self::$getShallow . $limitClause;
+            $sth = $this->doStatement($stmt); 
+        } else {
+            $stmt=self::$getSelectivelyShallow . $limitClause;
+            $sth=$this->doStatement($stmt, array("status"=>$status));
+        }
+        $posts=$sth->fetchAll(PDO::FETCH_ASSOC);
+        return $posts;
     }
     
 }

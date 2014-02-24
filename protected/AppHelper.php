@@ -36,6 +36,11 @@ class AppHelper {
             throw new Exception( $message );
         }
     }
+    
+    public function itemsPerPage()
+    {
+        return $this->options->pagination->limit;
+    }
 
     public function getConnection()
     {
@@ -66,7 +71,10 @@ class AppHelper {
         $layoutDir = $templateDir . "/layouts"; 
         if ( ! isset(self::$twig) ) {
         $loader = new Twig_Loader_Filesystem(array($templateDir, $layoutDir));
-        self::$twig = new Twig_Environment($loader);
+        self::$twig = new Twig_Environment($loader, array(
+            'debug'=>true
+        ));
+        self::$twig->addExtension(new Twig_Extension_Debug());
         }
         return self::$twig;
     }

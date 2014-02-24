@@ -1,0 +1,107 @@
+{% extends "main.html.twig" %}
+
+{% block title title %}
+
+{% block styles %}
+    <style type="text/css">
+        .pagination ul {
+            list-style: none;
+        }
+        .pagination li {
+            display: inline;
+        }
+        td, th {
+            border: 1px solid black;
+        }
+        table {
+                        border-collapse: collapse;
+        }
+
+    </style>
+   {{ parent() }}
+{% endblock %}
+
+{% block content %}
+<h2>Управление записями</h2>
+
+<form action="/admin/manage" method="GET">
+            <label for="status">Показать только</label>
+            <select name="status">
+            <option value="{{ constant('PostManager::DRAFT') }}">Черновики</option>
+            <option value="{{ constant('PostManager::PUBLISHED') }}">Опубликованные</option>
+            <option value="{{ constant('PostManager::ARCHIVE') }}">Устаревшие</option>
+        </select>
+            <input type="submit" method="GET" action="/admin/manage" value="применить фильтр">
+</form>
+
+<table>
+    <tr>
+        <th>
+            Заголовок
+        </th>
+        <th>
+            Время создания
+        </th>
+        <th>
+            Редактировался
+        </th>
+        <th>
+            Статус
+        </th>
+        <th>
+            Действие
+        </th>
+    </tr>
+    {% for post in posts %}
+    <tr>
+        <td>
+            {{ post.title }}
+        </td>
+        <td>
+            {{ post.create_time|date('d/m/Y') }}
+        </td>
+        <td>
+            {{ post.edit_time|date('d/m/Y') }}
+        </td>
+        <td>
+            {{ post.name }}
+        </td>
+        <td>
+            <a href="{{ "/admin/delete?id=" ~ post.id }}">Удалить</a>
+            <a href="{{ "/admin/edit?id=" ~ post.id }}">Редактировать</a>
+            <a href="{{ "/admin/view?id=" ~ post.id }}">Открыть</a>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+
+{% macro pagination(page, limit, lastPage, curURL, query) %}
+     
+    {% set q = ( query is empty ) ?  "page=" : "&page=" %}
+    
+    {% if lastPage > 1 %}
+    <div class="pagination">
+    <ul>
+      {% if page > 1 %}
+                <li><a href="{{ curURL ~ q ~ (page - 1) }}">&larr;</a></li>
+     {% endif %}
+     {% for i in 1..lastPage %}
+          {% if page == i %}
+                <li> {{ i }} </li>
+          {% else %}
+          <li><a href="{{ curURL ~ q ~ i }}">{{ i }}</a></li>
+          {% endif %}
+     {% endfor %}
+     {% if page < lastPage %}
+          <li><a href="{{ curURL ~ q ~ (page + 1) }}">&rarr;</a></li>
+     {% endif %}
+    </ul>
+    </div>
+    {% endif %}
+{% endmacro %}
+
+{% import _self as manage %}
+  {{ manage.pagination(page, limit, lastPage, curURL, query) }}
+
+{% endblock %}
+

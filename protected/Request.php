@@ -4,6 +4,7 @@ class Request
     private $properties;
     private $requestURI;
     private $feedback = array();
+    private $query="";
     
     public function __construct() {
         $this->init();
@@ -44,7 +45,7 @@ class Request
         return $this->feedback;
     }
     */
-    public function getRoute()
+    public function getRoute($string=false)
     {
         $route = array();
         //$parts = explode("/", $this->getProperty('REQUEST_URI'));
@@ -53,13 +54,23 @@ class Request
             if ( ! empty($parts[$i])) {
                 $parts[$i] = str_replace(array(".", "\\"), "", $parts[$i]);
                 if (mb_strpos($parts[$i], "?")) {
+                    $this->query = mb_substr($parts[$i], mb_strpos($parts[$i], "?"));
                     $parts[$i] = mb_substr($parts[$i], 0, mb_strpos($parts[$i], "?"));
                 }
                 //$parts[$i] = preg_replace("/(\\w)\\?.*/ui", "{1}", $parts[$i]);
                 $route[] = $parts[$i];
             }
         }
-        return $route;
+        if ( ! $string ) {
+            return $route;    
+        } else {
+            $route = "/" . join("/", $route);
+            return $route;
+        }
+    }
+    public function getQuery()
+    {
+        return $this->query;
     }
     
 }

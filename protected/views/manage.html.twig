@@ -27,20 +27,24 @@
             <label for="status">Показать</label>
             <select name="status">
             <option value="">Все</option>
-            {% for i in 1..3 %}
-               {% if i is constant('PostManager::DRAFT') %}
-                 {% set filter = 'черновики' %}
-               {% elseif i is constant('PostManager::PUBLISHED') %}
-                 {% set filter = 'активные' %}
-               {% elseif i is constant('PostManager::ARCHIVE') %}
-                  {% set filter = 'устаревшие' %}
-               {% endif %}
-            <option value="{{ i }}" {% if status == i %} selected="selected" {% endif %}>{{ "только "  ~ filter }}</option>
-            {% endfor %}
+            {% macro statuses(status) %}
+                {% for i in 1..3 %}
+                    {% if i is constant('PostManager::DRAFT') %}
+                        {% set filter = 'Черновики' %}
+                    {% elseif i is constant('PostManager::PUBLISHED') %}
+                        {% set filter = 'Активные' %}
+                    {% elseif i is constant('PostManager::ARCHIVE') %}
+                        {% set filter = 'Устаревшие' %}
+                    {% endif %}
+            <option value="{{ i }}" {% if status|default(null) == i %} selected="selected" {% endif %}>{{ filter }}</option>
+                {% endfor %}
+            {% endmacro %}
+            {% import _self as manage %}
+            {{ manage.statuses(status) }}
         </select>
             <input type="submit" method="GET" action="/admin/manage" value="применить фильтр">
 </form>
-
+    
 <table>
     <tr>
         <th>

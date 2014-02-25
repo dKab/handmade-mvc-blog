@@ -99,6 +99,10 @@ ON pt.tag_id=t.id WHERE t.name = :tag AND p.status= :status) GROUP BY p.id ORDER
     private static $countTotal = "SELECT COUNT(*) as total FROM posts";
     private static $countOnly ="SELECT COUNT(*) as total FROM posts WHERE status = :status";
     
+    private static $checkTags = "SELECT COUNT(*) as num FROM post_tag WHERE post_id = :id";
+    
+    private static $deleteTags = "DELETE FROM post_tag WHERE post_id=:id";
+    
     
     
     private function explodeTags(Array $posts)
@@ -151,9 +155,8 @@ ON pt.tag_id=t.id WHERE t.name = :tag AND p.status= :status) GROUP BY p.id ORDER
         return $posts;
     }
     
-    public function addPost($input)
+    private function cutBody($body)
     {
-        extract($input);
         $cutTag = AppHelper::instance()->getCutTag();
         if ( $cut = mb_strpos($body,$cutTag) ) {
             list($begining, $ending) = explode($cutTag, $body);
@@ -161,20 +164,39 @@ ON pt.tag_id=t.id WHERE t.name = :tag AND p.status= :status) GROUP BY p.id ORDER
             $begining = $body;
             $ending = "";
         }
-        try {
-        $this->dbh->beginTransaction();
-        $sth=$this->doStatement(self::$addPost, array(
-            'author'=>$user,
-            'title'=>$title,
-            //'body'=>$body,
+        return array(
             'begining'=>$begining,
             'ending'=>$ending,
-            'status'=>$status
-        ));
+        );
+    }
+    
+    public function addPost($input)
+    {
+        extract($input);
+        /*
+        $cutTag = AppHelper::instance()->getCutTag();
+        if ( $cut = mb_strpos($body,$cutTag) ) {
+            list($begining, $ending) = explode($cutTag, $body);
+        } else {
+            $begining = $body;
+            $ending = "";
+        }
+         * 
+         */
+        $body = $this->cutBody($body);
+        $data = array_merge(array(
+                'status'=>$status, 
+                'author'=>$user,
+                'title'=>$title,), $body);
+        try {
+        $this->dbh->beginTransaction();
+        $sth=$this->doStatement(self::$addPost, $data);
+        
         if ( ! $postId=$this->dbh->lastInsertId() ) {
             throw new Exception("Не удалось добавить пост");
         }
         if ( ! empty($tags) ) {
+            /*
             foreach ($tags as $name) {
                 $sth=$this->doStatement(self::$findTag, array(
                     'name'=>$name));
@@ -201,6 +223,9 @@ ON pt.tag_id=t.id WHERE t.name = :tag AND p.status= :status) GROUP BY p.id ORDER
                         throw new Exception("Не удалось связать тэг с постом");
                 }
             }
+             * 
+             */
+            $this->bindTags($postId, $tags);
         } 
         $this->dbh->commit();
         return $postId;
@@ -248,6 +273,92 @@ ON pt.tag_id=t.id WHERE t.name = :tag AND p.status= :status) GROUP BY p.id ORDER
         }
         $posts=$sth->fetchAll(PDO::FETCH_ASSOC);
         return $posts;
+    }
+    
+    
+    private function removeTags($postId)
+    {
+        //remove all tags linked to this post in post_tage table
+        //
+        //find all tags linked to this post and check frequincy for all of them
+        //if frequency is 1 -> remove tag else decrement frequency
+        
+        //если нет тэгов, то ничего не делаем
+        $hasTags = $this->doStatement(self::$checkTags, array('id'=>$postId))->fetchColumn();
+        if ( ! $hasTags ) {
+            return;
+        }
+        
+        /*
+        $count = $this->doStatement( self::$deleteTags, array('id'=>$postId) )->rowCount();
+        if ( ! $count ) {
+            throw new Exception("Не удалось удалить тэги");
+        }
+        */
+        
+        
+        
+        
+    }
+    
+    public function editPost($postId, $input)
+    {
+        extract($input);
+        
+        $body = $this->cutBody($body);
+        $data = array_merge(array(
+            'title'=>$title,
+            'author'=>$user,
+            'status'=>$status,
+            'id'=>$postId,
+        ), $body);
+        
+        $this->dbh->beginTransaction();
+        try {
+            $sth = $this->doStatement(self::$update, $data);
+      
+            $this->removeTags($postId);
+            
+            if ( ! empty($tags) ) {
+                $this->bindTags($postId, $tags);
+            }
+            $this->dbh->commit();
+            return $postId;
+        } catch (Exception $e) {
+            $this->dbh->rollBack();
+            $this->error = $e->getMessage();
+            return false;
+        }        
+    }
+    
+    private function bindTags($postId, Array $tags)
+    {
+                foreach ($tags as $name) {
+                $sth=$this->doStatement(self::$findTag, array(
+                    'name'=>$name));
+                if ( $id = $sth->fetchColumn() ) {
+                    $sth=$this->doStatement(self::$updateTag, array(
+                        'id'=>$id,
+                    ));
+                    if ( ! $count = $sth->rowCount() ) {
+                        throw new Exception("Не удалось обновить поле frequency тэга");
+                    }
+                } else {
+                    $sth=$this->doStatement(self::$insertTag, array(
+                        'name'=>$name
+                    ));
+                    if ( ! $id = $this->dbh->lastInsertId() ) {
+                        throw new Exception("Не удалось добавить тэг");
+                    }
+                }
+                $sth=$this->doStatement(self::$linkTag, array(
+                        'post'=>$postId,
+                        'tag'=>$id,
+                    ));
+                if ( ! $count = $sth->rowCount() ) {
+                        throw new Exception("Не удалось связать тэг с постом");
+                }
+            }
     }
     
 }

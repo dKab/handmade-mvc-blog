@@ -82,8 +82,8 @@ abstract class Controller
         $model = new PostManager();
         $post = $model->getPost($id);
         if ( ! $post ) {
-           // throw new NotFoundException("couldn't found requested post" . $id);
-            echo "not found!";
+           throw new NotFoundException("couldn't found requested post" . $id);
+            //echo "not found!";
         }
         $this->render('post.html.twig', array(
             'post'=>$post));

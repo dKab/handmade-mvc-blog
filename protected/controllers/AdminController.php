@@ -65,9 +65,15 @@ class AdminController extends Controller
     {   
         if ( ! $this->isFilled( array('title', 'body', 'status') ) ) {
                 $_SESSION['feedback'] = "Поля, помеченные звёздочкой должны быть заполнены";
-                header("Location: /admin/add/");
+                if ( filter_has_var(INPUT_POST, 'id') ) {
+                    $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
+                    header("Location: /admin/edit?id={$id}");
+                } else {
+                    header("Location: /admin/add/");
+                }
                 exit();
         }
+                
         $trusty = filter_input_array(INPUT_POST , array(
                 'status'=>array(
                     'filter'=>FILTER_VALIDATE_INT,
@@ -90,18 +96,26 @@ class AdminController extends Controller
                 )));
          $input = array_merge($_POST, $trusty);
          $input['user'] = $_SESSION['user'];
-         //var_dump($input);
          $model = new PostManager();
-         $id = $model->addPost($input);
-         if ( ! $id ) {
-             $_SESSION['feedback'] = $model->getError();
-             header("Location: /admin/add/");
-             exit();
+         if ( isset($id) ) {
+             $input = array_merge($input, array('id'=>$id));
+             $success = $model->editPost($id, $input);
+             if ( ! $success ) {
+                 $_SESSION['feedback'] = $model->getError();
+                 header("Location: /admin/edit?id={$id}");
+                 exit();
+             } 
          } else {
-             //render
-             //echo "success!!";
-             header("Location: /admin/view?id={$id}");
+         //var_dump($input);
+             $success = $model->addPost($input);
+             if ( ! $success ) {
+                 $_SESSION['feedback'] = $model->getError();
+                 header("Location: /admin/add/");
+                 exit();
+             }
          }
+         header("Location: /admin/view?id={$success}");
+         exit();
     }
     
     protected function manageAction()
@@ -166,6 +180,21 @@ class AdminController extends Controller
         ));
          * 
          */
+    }
+    
+    protected function editAction()
+    {
+        $id = filter_input(INPUT_GET, "id", FILTER_VALIDATE_INT);
+        $model = new PostManager();
+        $post = $model->getPost($id);
+        if ( ! $post ) {
+           throw new NotFoundException("couldn't find requested post" . $id);
+        }
+        
+        $this->render('edit.html.twig', array(
+           'post'=>$post,
+            'title'=>'Редактировать запись',
+        ));
     }
     
     

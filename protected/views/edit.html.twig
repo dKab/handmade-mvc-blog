@@ -4,7 +4,7 @@
     {% import 'add_post.html.twig' as form %}
     {# TODO need to pass cut tag somehow #}
     {% set body = post.begining ~ "#cut#" ~ post.ending %}
-    <input type="hidden" name="id" value="{{ id }}"
+    <input type="hidden" name="id" value="{{ post.id }}">
     {{ form.post(post.title, body, post.tags|join(', '), post.status) }}
 </form>
 {% endblock %}

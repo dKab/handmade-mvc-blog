@@ -41,12 +41,12 @@ class PostManager extends Transaction {
     
     private static $update = "UPDATE posts SET
                        author = :author,
-                       title = :title, body = :body, edit_time = NOW(),
-                       tags = :tags, status = :status WHERE id=?";
+                       title = :title, begining = :begining, ending=:ending, edit_time = NOW(),
+                       status = :status WHERE id=:id";
     
-    private static $delete = 'DELETE FROM posts WHERE id=?';
+    private static $delete = 'DELETE FROM posts WHERE id=:id';
     
-    private static $find = "SELECT * FROM posts WHERE id=?";
+    private static $find = "SELECT * FROM posts WHERE id=:id";
     
     private static $checkTagInPost = "SELECT * FROM post_tag WHERE post_id = :post AND tag_id = :tag";
     
@@ -101,9 +101,14 @@ ON pt.tag_id=t.id WHERE t.name = :tag AND p.status= :status) GROUP BY p.id ORDER
     
     private static $checkTags = "SELECT COUNT(*) as num FROM post_tag WHERE post_id = :id";
     
-    private static $deleteTags = "DELETE FROM post_tag WHERE post_id=:id";
+    private static $unlinkTags = "DELETE FROM post_tag WHERE post_id=:id";
     
+    private static $deleteTag = "DELETE FROM tags WHERE id IN (SELECT tag_id FROM post_tag WHERE post_id = :id)
+                                 AND tags.frequency = 1";
     
+    private static $updateFreq = "UPDATE tags SET frequency = frequency-1
+                                  WHERE id IN (SELECT tag_id FROM post_tag WHERE post_id = :id)
+                                  AND frequency > 1";
     
     private function explodeTags(Array $posts)
     {
@@ -278,30 +283,20 @@ ON pt.tag_id=t.id WHERE t.name = :tag AND p.status= :status) GROUP BY p.id ORDER
     
     private function removeTags($postId)
     {
-        //remove all tags linked to this post in post_tage table
-        //
         //find all tags linked to this post and check frequincy for all of them
         //if frequency is 1 -> remove tag else decrement frequency
-        
+           //remove all tags linked to this post in post_tage table
         //если нет тэгов, то ничего не делаем
         $hasTags = $this->doStatement(self::$checkTags, array('id'=>$postId))->fetchColumn();
         if ( ! $hasTags ) {
             return;
         }
-        
-        /*
-        $count = $this->doStatement( self::$deleteTags, array('id'=>$postId) )->rowCount();
-        if ( ! $count ) {
-            throw new Exception("Не удалось удалить тэги");
-        }
-        */
-        
-        
-        
-        
+        $this->doStatement(self::$deleteTag, array('id'=>$postId));
+        $this->doStatement(self::$updateFreq, array('id'=>$postId));
+        $this->doStatement(self::$unlinkTags, array('id'=>$postId));
     }
-    
-    public function editPost($postId, $input)
+
+    public function editPost($input)
     {
         extract($input);
         
@@ -310,20 +305,20 @@ ON pt.tag_id=t.id WHERE t.name = :tag AND p.status= :status) GROUP BY p.id ORDER
             'title'=>$title,
             'author'=>$user,
             'status'=>$status,
-            'id'=>$postId,
+            'id'=>$id,
         ), $body);
         
         $this->dbh->beginTransaction();
         try {
             $sth = $this->doStatement(self::$update, $data);
       
-            $this->removeTags($postId);
+            $this->removeTags($id);
             
             if ( ! empty($tags) ) {
-                $this->bindTags($postId, $tags);
+                $this->bindTags($id, $tags);
             }
             $this->dbh->commit();
-            return $postId;
+            return $id;
         } catch (Exception $e) {
             $this->dbh->rollBack();
             $this->error = $e->getMessage();
@@ -359,6 +354,26 @@ ON pt.tag_id=t.id WHERE t.name = :tag AND p.status= :status) GROUP BY p.id ORDER
                         throw new Exception("Не удалось связать тэг с постом");
                 }
             }
+    }
+    
+    public function removePost($id)
+    {
+        $this->dbh->beginTransaction();
+        try {
+            $this->removeTags($id);
+            
+            $success = $this->doStatement(self::$delete, array('id'=>$id))
+                ->rowCount();
+            if ( ! $success ) {
+                throw new Exception("Не удалось удалить пост");
+            }
+            $this->dbh->commit();
+            return $success;
+        } catch (Exception $e) {
+            $this->dbh->rollBack();
+            $this->error = $e->getMessage();
+            return false;
+        }
     }
     
 }

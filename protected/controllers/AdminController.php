@@ -93,13 +93,25 @@ class AdminController extends Controller
                            }    
                            return array_unique($valid);
                        },
+                ),
+                'id'=>array(
+                    'filter'=>FILTER_VALIDATE_INT,
+                    'options'=>array('min_range'=>1)
                 )));
+                       
          $input = array_merge($_POST, $trusty);
          $input['user'] = $_SESSION['user'];
+         /*
+         echo "<pre>";
+         print_r($input);
+         echo "</pre>";
+         exit();
+          * 
+          */
          $model = new PostManager();
-         if ( isset($id) ) {
-             $input = array_merge($input, array('id'=>$id));
-             $success = $model->editPost($id, $input);
+         if ( $input['id'] ) {
+             $_SESSION['feedback'] = 'Изменения успешно сохранены!';
+             $success = $model->editPost($input);
              if ( ! $success ) {
                  $_SESSION['feedback'] = $model->getError();
                  header("Location: /admin/edit?id={$id}");
@@ -197,5 +209,21 @@ class AdminController extends Controller
         ));
     }
     
-    
+    protected function deleteAction()
+    {
+        $id = filter_input(INPUT_GET, "id", FILTER_VALIDATE_INT);
+           if ( ! $id ) {
+               throw new NotFoundException("couldn't find requested post" . $id);
+           }
+        $model = new PostManager();
+        $success = $model->removePost($id);
+        if ( ! $success ) {
+            $_SESSION['feedback'] = $model->getError();
+        } else {
+            $_SESSION['feedback'] = "Пост успешно удалён!";
+        }
+       header('Location: /admin/manage');
+       exit();
+                
+    }
 }

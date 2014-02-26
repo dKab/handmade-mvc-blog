@@ -39,13 +39,13 @@
             {% endif %}
             
             <h2>{{ block('title') }}</h2>
+            
+            {% if feedback is defined %}
+                {{ feedback }} <br />
+            {% endif %}
                 
             {% block content %}
             {% endblock %}
-            
-            {% if feedback is defined %}
-            {{ feedback }}
-            {% endif %}
         </div>
         <div id="sidebar">
          </div>

@@ -78,9 +78,9 @@
             {{ post.name }}
         </td>
         <td>
-            <a href="{{ "/admin/delete?id=" ~ post.id }}">Удалить</a>
+            <a href="{{ "/admin/view?id=" ~ post.id }}">Просмотр</a>
             <a href="{{ "/admin/edit?id=" ~ post.id }}">Редактировать</a>
-            <a href="{{ "/admin/view?id=" ~ post.id }}">Открыть</a>
+            <a href="{{ "/admin/delete?id=" ~ post.id }}">Удалить</a>
         </td>
     </tr>
     {% endfor %}

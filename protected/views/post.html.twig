@@ -3,6 +3,12 @@
 {% block title post.title %}
 
 {% block content %}
+                           Дата создания: 
+                            {{ post.create_time }} <br />
+                           {% if post.create_time != post.edit_time %}
+                            Посдедний раз редактировался: 
+                             {{ post.edit_time }} <br />
+                           {% endif %}
     {% if user is defined %}
         Статус: {{ post.name }}
         <br />

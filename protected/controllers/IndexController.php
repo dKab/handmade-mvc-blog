@@ -59,4 +59,56 @@ class IndexController extends Controller
             exit();
         }
     }
+    
+    protected function commentAction()
+    {
+        $id = filter_input(INPUT_POST, 'postId', FILTER_VALIDATE_INT);
+        
+        if ( ! $this->isFilled(array('name', 'email', 'body', 'postId') ) ) {
+           $_SESSION['feedback'] = "Поля со звёздочкой обязательны";
+            header("Location: /index/view?id={$id}");
+            exit();
+        }
+
+        $input = filter_input_array(INPUT_POST, array(
+                'email'=>array(
+                    'filter'=> FILTER_VALIDATE_EMAIL,
+                 ),
+                 'notify'=>array(
+                     'filter'=> FILTER_VALIDATE_BOOLEAN
+                     ),
+                  'parentId'=>array(
+                      'filter'=>FILTER_VALIDATE_INT,
+                      'flags'=>FILTER_NULL_ON_FAILURE,
+                  )
+            ));
+        //var_dump($notify);
+        $comment = array_merge($_POST, $input);
+        /*
+        echo "<pre>";
+        var_dump($comment);
+        echo "</pre>";
+        exit();
+        */
+        if ( ! $input['email'] ) {
+            $_SESSION['feedback'] = "Еmail должен быть корректным е-mail адресом";
+            header("Location: /index/view?id={$id}");
+            exit();
+        }
+        
+        $model = new CommentManager();
+        try {
+            $commentId = $model->addComment($comment);
+            $message = ( AppHelper::instance()->getCommentRule() ) ? 
+                    'Спасибо за комментарий. Он будет опубликован после того, как пройдет модерацию.' :
+                    'Комментарий успешно добавлен!';
+            $_SESSION['feedback'] = $message;
+            header("Location: /index/view?id={$id}");
+            exit();
+        } catch (Exception $e) {
+            //do something else on production stage
+            echo $e->getMessage();
+            exit();
+        }
+    }
 }

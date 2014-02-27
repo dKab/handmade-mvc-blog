@@ -1,14 +1,18 @@
 {% extends "main.html.twig" %}
-{% block content %}
+
+{% block styles %}
 <style type="text/css">
-    label {
+                    label {
         width: 80px;
         display: inline-block;
     }
     input {
         margin: 5px;
     }
-</style>
+    </style>
+    {{ parent(styles) }}
+ {% endblock %}
+{% block content %}
 <form id="login_form" method="POST" action="/index/auth">
           <label for="name">Логин</label>
           <input type="text" name='name'></input><br />

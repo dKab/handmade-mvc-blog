@@ -65,6 +65,11 @@ class AppHelper {
         return $this->options->post->cut;
     }
     
+    public function getCommentRule()
+    {
+        return $this->options->comments->moderate;
+    }
+    
     public static function twig()
     {   
         $templateDir = "protected/views";

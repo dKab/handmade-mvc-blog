@@ -12,4 +12,7 @@
     <pagination>
         <limit>10</limit>
     </pagination>
+    <comments>
+        <moderate>1</moderate>
+    </comments>
 </root>

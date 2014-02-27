@@ -24,4 +24,38 @@
 
 {% endif %}
 
+ <hr>
+     {% if comments is defined and comments is not empty %}
+         <h3>  {{ comments|length }} Комментариев: </h3>
+          <section id='comments'>
+              {% for comment in comments %}
+                 {% include 'comment.html.twig' %}
+              {% endfor %}
+          </section>
+     {% else %}
+         <h3>Комментариев пока нет </h3>
+     {% endif %}
+        
+     {% macro commentForm(header, postId) %}
+          <form method='POST' action='/index/comment'>
+              {{ header }} <br>
+              <input type='text' name="name" style="margin-bottom: 10px;">
+              <label for='name' >Имя *</label><br>
+              <input type="text" name="email">
+              <label for="email">Email *</label><br>
+              <input type="hidden" name="postId" value="{{ postId }}">
+              <input type="hidden" name="parentId" value="null">
+              <label for="body">Комментарий *</label><br>
+              <textarea cols="59" rows="10" name="body">
+              </textarea><br>
+              <input type="checkbox" name="notify" checked="checked">
+              <label for="notify">Уведомлять меня по почте об ответах на мой комментарий</label><br>
+              <input type="submit" value="Отправить">
+          </form>
+     {% endmacro %}
+     
+     {% import _self as view %}
+          
+           {{ view.commentForm('Добавить комментарий', post.id) }}
+                              
 {% endblock %}

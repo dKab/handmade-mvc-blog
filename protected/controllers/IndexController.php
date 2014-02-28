@@ -99,7 +99,7 @@ class IndexController extends Controller
         $model = new CommentManager();
         try {
             $commentId = $model->addComment($comment);
-            $message = ( AppHelper::instance()->getCommentRule() ) ? 
+            $message = ( (bool)(string) AppHelper::instance()->getCommentRule() ) ? 
                     'Спасибо за комментарий. Он будет опубликован после того, как пройдет модерацию.' :
                     'Комментарий успешно добавлен!';
             $_SESSION['feedback'] = $message;

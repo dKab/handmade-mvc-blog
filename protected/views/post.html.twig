@@ -2,6 +2,27 @@
 
 {% block title post.title %}
 
+{% block styles %}
+   {{ parent() }}
+    <style type="text/css">
+        .comment {
+           padding-left: 5px;
+        }
+    </style>
+{% endblock %}
+{% block javascript %}
+    {{ parent() }}
+    <script type="text/javascript">
+       $(function() {
+          $('a.reply_link').click(function() {
+              var toBeParent = $(this).closest('.comment').attr('id');
+              $('#comment-form').find("input[name='parentId']").val(toBeParent).end().insertAfter($(this).closest('.comment'));
+              return false;
+          }); 
+       });
+    </script> 
+{% endblock %}
+
 {% block content %}
                            Дата создания: 
                             {{ post.create_time }} <br />
@@ -37,7 +58,7 @@
      {% endif %}
         
      {% macro commentForm(header, postId) %}
-          <form method='POST' action='/index/comment'>
+          <form method='POST' action='/index/comment' id="comment-form">
               {{ header }} <br>
               <input type='text' name="name" style="margin-bottom: 10px;">
               <label for='name' >Имя *</label><br>

@@ -10,9 +10,14 @@
         <cut>#cut#</cut>
     </post>
     <pagination>
-        <limit>10</limit>
+        <posts>
+            <limit>10</limit>
+        </posts>
+        <comments>
+            <limit>25</limit>
+        </comments>
     </pagination>
     <comments>
-        <moderate>1</moderate>
+        <moderate>0</moderate>
     </comments>
 </root>

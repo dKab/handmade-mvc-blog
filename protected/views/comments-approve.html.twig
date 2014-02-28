@@ -1,0 +1,28 @@
+{% extends "main.html.twig" %}
+
+{% block title title|title %}
+
+{% block content %}
+    {% for comment in comments %}
+        <div class="comment_brief">
+            <div class="comment_head">
+                <p class="time">Добавлен: {{ comment.time|date('d/m/y') }}</p>
+                к посту <a href="/admin/view?id={{ comment.post_id }}">
+                           {{ (comment.postTitle|length < 20) ? comment.postTitle : comment.postTitle|slice(0, 20) ~ '...' }}</a>
+                <p class="name">{{ comment.name }}</p>
+                <p class="body">{{ comment.body|nl2br }}</p>
+                <p class="status">Статус: {{ comment.fancyStatus }}</p>
+            </div>
+          <p class="options">
+              <a href="/admin/deleteComment?id={{ comment.id }}">Удалить</a>
+              {% if comment.status == constant('CommentManager::PENDING') %}
+                  | <a href="/admin/approve?id={{ comment.id }}">Утвердить</a>
+              {% endif %}
+          </p>
+        </div>
+    {% endfor %}
+
+    {% import 'manage.html.twig' as manage %}
+      {{ manage.pagination(page, limit, lastPage, curURL, query) }}
+
+{% endblock %}

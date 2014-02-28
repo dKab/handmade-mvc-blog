@@ -1,0 +1,18 @@
+{% set level = comment.path|split('.')|length %}
+<div class="comment" id="{{ comment.id }}" style="margin-left: {{ (level-2)*20 }}px; {% if level>2 %} border-left: 1px solid silver; {% endif %} ">
+    <div class="comment_head">
+        <span class="name">
+            {{ comment.name }}
+        </span>
+        <span>
+            {{ comment.time|date('d/m/y') }}
+        </span>
+    </div>
+    <div class="comment_body">
+        {{ comment.body|nl2br }}
+        
+    </div>
+    <p class="comment_reply">
+        <a class="reply_link" href="*">Ответить</a>
+    </p>
+</div>

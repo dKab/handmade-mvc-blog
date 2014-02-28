@@ -37,9 +37,14 @@ class AppHelper {
         }
     }
     
-    public function itemsPerPage()
+    public function postsPerPage()
     {
-        return $this->options->pagination->limit;
+        return $this->options->pagination->posts->limit;
+    }
+    
+    public function commentsPerPage()
+    {
+        return $this->options->pagination->comments->limit;
     }
 
     public function getConnection()

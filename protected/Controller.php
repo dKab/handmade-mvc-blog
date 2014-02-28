@@ -5,7 +5,7 @@ abstract class Controller
     
     protected $data=array();
     
-    final public function __construct() { }
+    //public function __construct() { }
     
     protected function doExecute($action=null)
     {
@@ -81,13 +81,17 @@ abstract class Controller
         //exit();
         $model = new PostManager();
         $post = $model->getPost($id);
+        $commentHandler = new CommentManager;
+        $comments = $commentHandler->getAllComments($id);
         if ( ! $post ) {
            throw new NotFoundException("couldn't found requested post" . $id);
             //echo "not found!";
         }
         $this->render('post.html.twig', array(
-            'post'=>$post));
+            'post'=>$post,
+            'comments'=>$comments));
     }    
+
     /*
      * don't need it if we use Twig
     protected function render($view, array $data, $layout=null)

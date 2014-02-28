@@ -2,6 +2,19 @@
 
 class AdminController extends Controller
 {
+    private $pendingNum;
+    
+    public function getPendingNum()
+    {
+        return $this->pendingNum;
+    }
+    
+    public function __construct()
+    {
+        $commentHandler = new CommentManager();
+        $this->pendingNum = $commentHandler->CountPending();
+    }
+    
     protected function indexAction()
     {
         return $this->listAction();
@@ -27,6 +40,7 @@ class AdminController extends Controller
     
     protected function getFeedback() {
         $this->data['user'] = $_SESSION['user'];
+        $this->data['pendingNum'] = $this->pendingNum;
         return parent::getFeedback();
     }
     
@@ -139,7 +153,7 @@ class AdminController extends Controller
             ));
         $total = $model->countTotal($status);
         //var_dump($total);
-        $limit = AppHelper::instance()->ItemsPerPage();
+        $limit = AppHelper::instance()->postsPerPage();
         $lastPage = $pagesNum = ceil($total/$limit);
         //var_dump($lastPage);
         if ( ! filter_has_var(INPUT_GET, 'page') ) {
@@ -225,5 +239,79 @@ class AdminController extends Controller
        header('Location: /admin/manage');
        exit();
                 
+    }
+    
+    protected function approveCommentsAction()
+    {
+        $commentsHandler = new CommentManager();
+        
+        $total = $commentsHandler->countAll();
+ 
+        $limit = AppHelper::instance()->commentsPerPage();
+        $lastPage = $pagesNum = ceil($total/$limit);
+
+        if ( ! filter_has_var(INPUT_GET, 'page') ) {
+            $page = 1;
+        } else {
+            $page = filter_input(INPUT_GET, 'page', FILTER_VALIDATE_INT, array(
+                'min_range'=>1,
+                'max_range'=>$lastPage));
+        }
+        $offset = ($page-1) * $limit; 
+        
+        $comments = $commentsHandler->getPartial($offset, $limit);
+        
+        $route = AppHelper::instance()->getRequest()->getRoute(true);
+        $query=$_SERVER['QUERY_STRING'];
+        
+        if (! empty($query) ) {
+            if ( mb_strpos($query, "page") !== false ) {
+                $query = mb_substr($query, 0, mb_strpos($query, "&"));
+            }
+        }
+        $route .= "?" . $query;
+        
+        $this->render('comments-approve.html.twig', array(
+            'title'=>'Управление коомментариями',
+            'comments'=>$comments,
+            'page'=>$page,
+            'lastPage'=>$lastPage,
+            'curURL'=>$route,
+            'query'=>$query,
+        ));
+    }
+    
+    protected function approveAction()
+    {
+        $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT, array('options' => 'FILTER_NULL_ON_FAILURE'));
+        if ( ! $id ) {
+            $_SESSION['feedback']="комментарий не найден";
+            header('Location: /admin/approveComments');
+            exit();
+        }
+        $commentHandler = new CommentManager();
+        $success = $commentHandler->approveComment($id);
+        if ( ! $success ) {
+            //TODO something
+        }
+        header('Location: /admin/approveComments');
+        exit();
+    }
+    
+    protected function deleteCommentAction()
+    {
+        $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT, array('options' => 'FILTER_NULL_ON_FAILURE'));
+        if ( ! $id ) {
+            $_SESSION['feedback']="комментарий не найден";
+            header('Location: /admin/approveComments');
+            exit();
+        }
+        $commentHandler = new CommentManager();
+        $success = $commentHandler->deleteComment($id);
+        if ( ! $success ) {
+            //TODO something
+        }
+        header('Location: /admin/approveComments');
+        exit();
     }
 }

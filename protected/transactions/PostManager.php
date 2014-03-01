@@ -52,16 +52,18 @@ class PostManager extends Transaction {
     
     private static $linkTag = "INSERT INTO post_tag VALUES(:post, :tag)";
     
-    private static $findByStatus = "SELECT p.id, p.title, p.create_time, p.edit_time, p.status, p.begining,
+    private static $findByStatus = "SELECT COUNT(DISTINCT c.id) as comments, p.id, p.title, p.create_time, p.edit_time, p.status, p.begining,
                                             GROUP_CONCAT(DISTINCT t.name SEPARATOR ', ') as tags
-                                            FROM posts p JOIN post_tag pt
+                                            FROM comments c JOIN posts p ON c.post_id = p.id
+                                            JOIN post_tag pt
                                             ON p.id=pt.post_id JOIN tags t
                                             ON pt.tag_id = t.id WHERE p.status=:status
                                             GROUP BY p.id ORDER BY create_time desc";
     
-    private static $getAll = "SELECT p2l.id, p2l.title, p2l.create_time, p2l.edit_time, p2l.status, p2l.begining, p2l.name,  GROUP_CONCAT(DISTINCT t.name SEPARATOR ', ') as tags
-                                            FROM (SELECT posts.*, lookup.name, lookup.position
-                                            FROM posts JOIN lookup ON posts.status = lookup.code
+    private static $getAll = "SELECT p2l.comments, p2l.id, p2l.title, p2l.create_time, p2l.edit_time, p2l.status, p2l.begining, p2l.name,  GROUP_CONCAT(DISTINCT t.name SEPARATOR ', ') as tags
+                                            FROM (SELECT COUNT(c.id) as comments, posts.*, lookup.name, lookup.position
+                                            FROM comments c JOIN posts ON c.post_id = posts.id
+                                            JOIN lookup ON posts.status = lookup.code
                                                         WHERE lookup.type = 'Post type') as p2l 
                                             JOIN post_tag pt
                                             ON p2l.id=pt.post_id JOIN tags t

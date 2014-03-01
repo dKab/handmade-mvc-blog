@@ -63,13 +63,23 @@ class IndexController extends Controller
     protected function commentAction()
     {
         $id = filter_input(INPUT_POST, 'postId', FILTER_VALIDATE_INT);
-        
         if ( ! $this->isFilled(array('name', 'email', 'body', 'postId') ) ) {
            $_SESSION['feedback'] = "Поля со звёздочкой обязательны";
             header("Location: /index/view?id={$id}");
             exit();
         }
+        require_once('recaptchalib.php');
+        $privatekey = "6LdBU-8SAAAAAAF2Bhs95JcYDeVNTaR1fN5NbCM_";
+        $resp = recaptcha_check_answer ($privatekey,
+                                $_SERVER["REMOTE_ADDR"],
+                                $_POST["recaptcha_challenge_field"],
+                                $_POST["recaptcha_response_field"]);
 
+        if (!$resp->is_valid) {
+            $_SESSION['feedback'] = "Вы неверно ввели каптчу. Попробуйте еще раз.";
+            header("Location: /index/view?id={$id}");
+        exit();
+        }
         $input = filter_input_array(INPUT_POST, array(
                 'email'=>array(
                     'filter'=> FILTER_VALIDATE_EMAIL,
@@ -82,14 +92,15 @@ class IndexController extends Controller
                       'flags'=>FILTER_NULL_ON_FAILURE,
                   )
             ));
-        //var_dump($notify);
-        $comment = array_merge($_POST, $input);
-        /*
-        echo "<pre>";
-        var_dump($comment);
-        echo "</pre>";
-        exit();
-        */
+        $fields = array('name', 'body', 'email', 'notify', 'postId', 'parentId');
+        $post = array();
+         array_walk($_POST, function($val, $key) use (&$post, $fields) {
+            if ( in_array($key, $fields)) {
+                $post[$key]=$val;
+            }
+        });
+        $comment= array_merge($post, $input);
+
         if ( ! $input['email'] ) {
             $_SESSION['feedback'] = "Еmail должен быть корректным е-mail адресом";
             header("Location: /index/view?id={$id}");

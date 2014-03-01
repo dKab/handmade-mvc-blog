@@ -18,7 +18,12 @@
               var toBeParent = $(this).closest('.comment').attr('id');
               $('#comment-form').find("input[name='parentId']").val(toBeParent).end().insertAfter($(this).closest('.comment'));
               return false;
-          }); 
+          });
+          $('#add_comment').click(function() {
+              var pos = $('#comment-form').find("input[name='parentId']").val(null).end().appendTo('#comments').offset().top;
+              $('html, body').scrollTop(pos);
+              return false;
+          })
        });
     </script> 
 {% endblock %}
@@ -47,17 +52,17 @@
 
  <hr>
      {% if comments is defined and comments is not empty %}
-         <h3>  {{ comments|length }} Комментариев: </h3>
+ <span> Комментарии ({{ comments|length }}) </span> | <a href="*" id="add_comment">Комментировать</a>
           <section id='comments'>
               {% for comment in comments %}
                  {% include 'comment.html.twig' %}
               {% endfor %}
           </section>
      {% else %}
-         <h3>Комментариев пока нет </h3>
+        <span> Комментариев пока нет </span> | <a href="*" id="add_comment">Комментировать</a>
      {% endif %}
         
-     {% macro commentForm(header, postId) %}
+     {% macro commentForm(header, postId, recaptcha) %}
           <form method='POST' action='/index/comment' id="comment-form">
               {{ header }} <br>
               <input type='text' name="name" style="margin-bottom: 10px;">
@@ -71,12 +76,15 @@
               </textarea><br>
               <input type="checkbox" name="notify" checked="checked">
               <label for="notify">Уведомлять меня по почте об ответах на мой комментарий</label><br>
+              {% autoescape false %}
+                  {{ recaptcha }}
+              {% endautoescape %}
               <input type="submit" value="Отправить">
           </form>
      {% endmacro %}
      
      {% import _self as view %}
           
-           {{ view.commentForm('Добавить комментарий', post.id) }}
+           {{ view.commentForm('Добавить комментарий', post.id, recaptcha) }}
                               
 {% endblock %}

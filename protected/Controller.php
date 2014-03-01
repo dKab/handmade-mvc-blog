@@ -87,9 +87,15 @@ abstract class Controller
            throw new NotFoundException("couldn't found requested post" . $id);
             //echo "not found!";
         }
+        
+        require_once('recaptchalib.php');
+        $publickey = "6LdBU-8SAAAAAMcosmNtVcdNq03HBNWaO5YmHByT";
+        $recaptcha= recaptcha_get_html($publickey);
+        //echo recaptcha_get_html($publickey);
         $this->render('post.html.twig', array(
             'post'=>$post,
-            'comments'=>$comments));
+            'comments'=>$comments,
+            'recaptcha'=>$recaptcha));
     }    
 
     /*

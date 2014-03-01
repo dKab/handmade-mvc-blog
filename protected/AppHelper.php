@@ -97,4 +97,5 @@ class AppHelper {
     {
         self::$request = $request;
     }
+
 }

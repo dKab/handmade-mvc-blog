@@ -39,8 +39,10 @@
         Статус: {{ post.name }}
         <br />
     {% endif %}
-{{ post.begining|nl2br }}
-{{ post.ending|nl2br }}
+    {% autoescape false %}
+        {{ beginingHtml }}
+        {{ endingHtml }}
+    {% endautoescape %}
 <br />
 {% if post.tags is not empty %}
 

@@ -23,6 +23,7 @@ class AdminController extends Controller
     protected function listAction()
     {
         //$tag = AppHelper::instance()->getRequest()->properties['tag'];
+        
         $tag = filter_input(INPUT_GET, "tag", FILTER_SANITIZE_STRING);
         $model = new PostManager();
         if ( $tag ) {  
@@ -32,9 +33,14 @@ class AdminController extends Controller
             $posts = $model->getAllPosts();
             $title = "Все записи";
         }
+        
+        //$parsedown = new Parsedown();
+        //$beginingHtml = $parsedown->parse($post['begining']);
+        
         $this->render("posts.html.twig", array(
             'posts'=>$posts,
             'title'=>$title,
+            //'beginingHtml'=>$beginingHtml,
         )); 
     }
     
@@ -122,6 +128,7 @@ class AdminController extends Controller
          exit();
           * 
           */
+         
          $model = new PostManager();
          if ( $input['id'] ) {
              $_SESSION['feedback'] = 'Изменения успешно сохранены!';
@@ -212,7 +219,7 @@ class AdminController extends Controller
     {
         $id = filter_input(INPUT_GET, "id", FILTER_VALIDATE_INT);
         $model = new PostManager();
-        $post = $model->getPost($id);
+        $post = $model->getPost($id, true);
         if ( ! $post ) {
            throw new NotFoundException("couldn't find requested post" . $id);
         }

@@ -23,7 +23,7 @@
               var pos = $('#comment-form').find("input[name='parentId']").val(null).end().appendTo('#comments').offset().top;
               $('html, body').scrollTop(pos);
               return false;
-          })
+          });
        });
     </script> 
 {% endblock %}
@@ -40,8 +40,8 @@
         <br />
     {% endif %}
     {% autoescape false %}
-        {{ beginingHtml }}
-        {{ endingHtml }}
+        {{ post.begining_html }}
+        {{ post.ending_html }}
     {% endautoescape %}
 <br />
 {% if post.tags is not empty %}

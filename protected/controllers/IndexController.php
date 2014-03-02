@@ -18,9 +18,15 @@ class IndexController extends Controller
             $posts = $model->getPublished();
             $title = "Все записи";
         }
+       // $parsedown = new Parsedown();
+        //var_dump($parsedown);
+        
+        //$beginingHtml = $parsedown->parse($post['begining']);
+        
         $this->render("posts.html.twig", array(
             'posts'=>$posts,
             'title'=>$title,
+            //'beginingHtml'=>$beginingHtml,
         )); 
     }
     

@@ -93,18 +93,13 @@ abstract class Controller
         $recaptcha= recaptcha_get_html($publickey);
         //echo recaptcha_get_html($publickey);
         
-        $parsedown = new Parsedown();
-        //var_dump($parsedown);
-        
-        $beginingHtml = $parsedown->parse($post['begining']);
-        $endingHtml = $parsedown->parse($post['ending']);
         //echo $parsedown->parse('Hello _Parsedown_!'); # prints: <p>Hello <em>Parsedown</em>!</p>
         //exit();
         $this->render('post.html.twig', array(
             'post'=>$post,
             'comments'=>$comments,
-            'beginingHtml'=>$beginingHtml,
-            'endingHtml'=>$endingHtml,
+            //'beginingHtml'=>$beginingHtml,
+            //'endingHtml'=>$endingHtml,
             'recaptcha'=>$recaptcha));
     }    
 

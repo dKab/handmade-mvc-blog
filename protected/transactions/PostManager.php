@@ -30,8 +30,8 @@ class PostManager extends Transaction {
             ORDER BY lookup.position asc, p.create_time desc";
    
     private static $addPost = 'INSERT INTO posts
-        (author, title, begining, ending, create_time, edit_time, status)
-        VALUES(:author, :title, :begining, :ending, NOW(), NOW(), :status)';
+        (author, title, begining, ending, create_time, edit_time, status, begining_html, ending_html)
+        VALUES(:author, :title, :begining, :ending, NOW(), NOW(), :status, :beginingHtml, :endingHtml)';
     
     private static $insertTag = "INSERT INTO tags (name, frequency) VALUES(:name, 1)";
     
@@ -42,17 +42,17 @@ class PostManager extends Transaction {
     private static $update = "UPDATE posts SET
                        author = :author,
                        title = :title, begining = :begining, ending=:ending, edit_time = NOW(),
-                       status = :status WHERE id=:id";
+                       status = :status, begining_html=:beginingHtml, ending_html=:endingHtml WHERE id=:id";
     
     private static $delete = 'DELETE FROM posts WHERE id=:id';
     
-    private static $find = "SELECT * FROM posts WHERE id=:id";
+   // private static $find = "SELECT * FROM posts WHERE id=:id";
     
     private static $checkTagInPost = "SELECT * FROM post_tag WHERE post_id = :post AND tag_id = :tag";
     
     private static $linkTag = "INSERT INTO post_tag VALUES(:post, :tag)";
     
-    private static $findByStatus = "SELECT p.id, p.title, p.create_time, p.edit_time, p.status, p.begining, GROUP_CONCAT(DISTINCT t.name SEPARATOR ', ') as tags, p.comments
+    private static $findByStatus = "SELECT p.id, p.title, p.create_time, p.edit_time, p.status, p.begining_html, GROUP_CONCAT(DISTINCT t.name SEPARATOR ', ') as tags, p.comments
 
     FROM (SELECT p.*, pc.comments
       FROM posts p
@@ -68,7 +68,7 @@ class PostManager extends Transaction {
                                             ON pt.tag_id = t.id WHERE p.status=:status
                                             GROUP BY p.id ORDER BY create_time desc";
     
-    private static $getAll = "SELECT p2l.id, p2l.title, p2l.create_time, p2l.edit_time, p2l.status, p2l.begining, p2l.name, GROUP_CONCAT(DISTINCT t.name SEPARATOR ', ') as tags, p2l.comments
+    private static $getAll = "SELECT p2l.id, p2l.title, p2l.create_time, p2l.edit_time, p2l.status, p2l.begining_html, p2l.name, GROUP_CONCAT(DISTINCT t.name SEPARATOR ', ') as tags, p2l.comments
 FROM (SELECT p.*, pc.comments, lookup.name
       FROM posts p
       LEFT JOIN 
@@ -86,7 +86,7 @@ FROM (SELECT p.*, pc.comments, lookup.name
                                             GROUP BY p2l.id ORDER BY p2l.status, p2l.create_time desc";
     
     private static $findPostsByTagAndStatus = "
-SELECT p.id, p.title, p.create_time, p.edit_time, p.status, p.begining, GROUP_CONCAT(DISTINCT t.name SEPARATOR ', ') as tags FROM
+SELECT p.id, p.title, p.create_time, p.edit_time, p.status, p.begining_html, GROUP_CONCAT(DISTINCT t.name SEPARATOR ', ') as tags FROM
 posts p JOIN post_tag p2t ON p.id=p2t.post_id JOIN tags t
 ON p2t.tag_id=t.id WHERE p.id IN
 (SELECT p.id FROM posts p JOIN post_tag pt
@@ -94,7 +94,7 @@ ON p.id=pt.post_id JOIN tags t
 ON pt.tag_id=t.id WHERE t.name = :tag AND p.status= :status) GROUP BY p.id ORDER BY p.create_time desc";
     
    private static $findPostsByTag = "SELECT p2l.id, p2l.title, p2l.create_time, p2l.edit_time, p2l.status, 
-                                     p2l.begining, p2l.name, GROUP_CONCAT(DISTINCT t.name SEPARATOR ', ') as tags FROM
+                                     p2l.begining_html, p2l.name, GROUP_CONCAT(DISTINCT t.name SEPARATOR ', ') as tags FROM
                                       (SELECT posts.*, lookup.name, lookup.position
                                             FROM posts JOIN lookup ON posts.status = lookup.code
                                                         WHERE lookup.type = 'Post type') as p2l
@@ -104,9 +104,20 @@ ON pt.tag_id=t.id WHERE t.name = :tag AND p.status= :status) GROUP BY p.id ORDER
                                       ON p.id=pt.post_id JOIN tags t 
                                       ON pt.tag_id=t.id WHERE t.name = :tag) GROUP BY p2l.id ORDER BY p2l.status asc, p2l.create_time desc";
     
-    private static $findPost = "SELECT p.*, l.name as name FROM posts p JOIN lookup l ON
+   /* private static $findPost = "SELECT p.*, l.name as name FROM posts p JOIN lookup l ON
                                   p.status = l.code WHERE l.type = 'Post type'  
                                   AND p.id=:id";
+    */
+    private static $getRaw = "SELECT p.id, p.title, p.begining, p.ending, p.status, 
+                                  l.name as name FROM posts p JOIN lookup l ON
+                                  p.status = l.code WHERE l.type = 'Post type'  
+                                  AND p.id=:id";
+    private static $getPretty = "SELECT p.id, p.title, p.begining_html,
+                                 p.ending_html, p.status, p.child_comments, p.edit_time, p.create_time,
+                                 l.name as name FROM posts p JOIN lookup l ON
+                                  p.status = l.code WHERE l.type = 'Post type'  
+                                  AND p.id=:id";
+                                 
     
     private static $getTags = "SELECT t.name FROM tags t
                                JOIN post_tag p2t ON t.id=p2t.tag_id
@@ -206,6 +217,16 @@ ON pt.tag_id=t.id WHERE t.name = :tag AND p.status= :status) GROUP BY p.id ORDER
          * 
          */
         $body = $this->cutBody($body);
+        
+        $parsedown = new Parsedown();
+        //var_dump($parsedown);
+        
+         $beginingHtml = $parsedown->parse($body['begining']);
+         $endingHtml = $parsedown->parse($body['ending']);
+         
+         $body['beginingHtml'] = $beginingHtml;
+         $body['endingHtml'] = $endingHtml;
+        
         $data = array_merge(array(
                 'status'=>$status, 
                 'author'=>$user,
@@ -258,9 +279,14 @@ ON pt.tag_id=t.id WHERE t.name = :tag AND p.status= :status) GROUP BY p.id ORDER
         }    
     }
     
-    public function getPost($id)
+    public function getPost($id, $raw=false)
     {
-        $sth=$this->doStatement(self::$findPost, array('id'=>$id));
+        if ( ! $raw ) {
+            $sth=$this->doStatement(self::$getPretty, array('id'=>$id));
+        } else {
+            $sth=$this->doStatement(self::$getRaw, array('id'=>$id));
+        }
+        //$sth=$this->doStatement(self::$findPost, array('id'=>$id));
         if ( $found = $sth->fetch(PDO::FETCH_ASSOC) ) {
             $sth=$this->doStatement(self::$getTags, array('id'=>$found['id']));
             $tags=$sth->fetchAll(PDO::FETCH_COLUMN);
@@ -318,6 +344,16 @@ ON pt.tag_id=t.id WHERE t.name = :tag AND p.status= :status) GROUP BY p.id ORDER
         extract($input);
         
         $body = $this->cutBody($body);
+        
+        $parsedown = new Parsedown();
+        //var_dump($parsedown);
+        
+         $beginingHtml = $parsedown->parse($body['begining']);
+         $endingHtml = $parsedown->parse($body['ending']);
+         
+         $body['beginingHtml'] = $beginingHtml;
+         $body['endingHtml'] = $endingHtml;
+        
         $data = array_merge(array(
             'title'=>$title,
             'author'=>$user,

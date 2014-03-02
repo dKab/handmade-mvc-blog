@@ -69,6 +69,10 @@ class AppHelper {
     {
         return $this->options->post->cut;
     }
+    public function getDefaultCategory()
+    {
+        return $this->options->post->defaultCategory;
+    }
     
     public function getCommentRule()
     {

@@ -1,8 +1,47 @@
 {% extends "main.html.twig" %}    
 
+{% block javascript %}
+    {{ parent() }}
+    <script type="text/javascript">
+        $(function() {
+            var $new = $('input[name="new_category"]');
+            var $existing = $('select[name="categories"]');
+            var $radio = $('input[name="category_type"]');
+            
+            if ($radio && $radio.val() === 'categories') {
+                $new.hide();
+            }
+            
+            $radio.on('change', function(){
+               if ($(this).val() === "new_category") {
+                       $existing.val('').hide();
+                       $new.show();
+               } else if ($(this).val() === 'categories') {
+                   $existing.show();
+                   $new.val(null).hide();
+               }
+           });
+        });    
+    </script>
+{% endblock %}
+
 {% block content %}
     <form method="POST" action="/admin/store">
-       {% macro post(title, body, tags, status) %}
+        
+       {% macro post(categories, title, body, tags, status) %}
+        <label for="category">Категория:</label><br>
+        {% if categories is not empty %}
+            <input type="radio" name="category_type" value="categories" checked>Выбрать из существующих категорий
+            <input type="radio" name="category_type" value="new_category">Создать новую категорию<br>
+        
+            <select name="categories">
+                <option value="">Выберите категорию</option>
+                {% for category in categories %}
+                    <option value="{{ category.name }}">{{ category.name }}</option>
+                {% endfor %}
+            </select>
+        {% endif %}
+        <input type="text" name="new_category" size="68"><br>
         <label for="title">Заголовок*:</label><br />
         <input type="text" name="title" value="{{ title|default('') }}" size="68"></input><br />
         <label for="body">Содержимое*:</label><br />
@@ -16,7 +55,9 @@
         </select><br />
         <input type="submit" value="{{ (title is defined and title is not empty )? 'Сохранить изменения' : 'Отправить' }}"></input>
        {% endmacro %}
+        
     {% import _self as form %}
-        {{ form.post() }}
+        {{ form.post(categories) }}
     </form>
+    
 {% endblock %}

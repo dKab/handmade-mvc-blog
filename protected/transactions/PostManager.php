@@ -18,11 +18,21 @@ class PostManager extends Transaction {
            :status
            ORDER BY create_time DESC";
     */
+    
+    private static $findCategory = "SELECT COUNT(*) FROM categories WHERE name=:category";
+    
+    private static $createCategory = "INSERT INTO categories(name) VALUES(:category)";
+    
+    private static $incrementCategory = "UPDATE categories SET num_posts=num_posts+1 WHERE name=:category";
+    
+    private static $decrementCategory = "UPDATE categories SET num_posts=num_posts-1 WHERE name=:category";
  
     private static $getShallow = "SELECT p.id, p.title, p.create_time, p.edit_time, p.status, lookup.name, lookup.position
             FROM posts  p JOIN lookup ON p.status = lookup.code
             WHERE lookup.type = 'Post type'
             ORDER BY lookup.position asc, p.create_time desc";
+    
+    private static $categories = "SELECT name FROM categories";
     
     private static $getSelectivelyShallow = "SELECT p.id, p.title, p.create_time, p.edit_time, p.status, lookup.name, lookup.position
             FROM posts  p JOIN lookup ON p.status = lookup.code
@@ -30,8 +40,8 @@ class PostManager extends Transaction {
             ORDER BY lookup.position asc, p.create_time desc";
    
     private static $addPost = 'INSERT INTO posts
-        (author, title, begining, ending, create_time, edit_time, status, begining_html, ending_html)
-        VALUES(:author, :title, :begining, :ending, NOW(), NOW(), :status, :beginingHtml, :endingHtml)';
+        (author, title, begining, ending, create_time, edit_time, status, begining_html, ending_html, category)
+        VALUES(:author, :title, :begining, :ending, NOW(), NOW(), :status, :beginingHtml, :endingHtml, :category)';
     
     private static $insertTag = "INSERT INTO tags (name, frequency) VALUES(:name, 1)";
     
@@ -163,6 +173,13 @@ ON pt.tag_id=t.id WHERE t.name = :tag AND p.status= :status) GROUP BY p.id ORDER
         return $this->explodeTags($related);
     }
     
+    
+    private function doesCategoryExist($category)
+    {
+        $exists = $this->doStatement(self::$findCategory, array('category'=>$category))->fetchColumn();
+        return $exists;
+    }
+    
     public function getAllPosts()
     {
         $ret = array();
@@ -203,6 +220,30 @@ ON pt.tag_id=t.id WHERE t.name = :tag AND p.status= :status) GROUP BY p.id ORDER
         );
     }
     
+    private function createCategory($category)
+    { 
+        if ( ! $success=$this->doStatement(self::$createCategory, array('category'=>$category))->rowCount() ) {
+            throw new Exception("Не удалось создать категорию");
+        } 
+        return $success;
+    }
+    
+    private function incrementCategoryCounter($category)
+    {
+        if (! $success=$this->doStatement(self::$incrementCategory, array('category'=>$category))->rowCount() ) {
+             throw new Exception("Не удалось обновить счетчик категории");            
+        }
+        return $success;
+    }
+    
+    private function decrementCategoryCounter($category)
+    {
+        if (!$success=$this->doStatement(self::$decrementCategory, array('category'=>$category))->rowCount()) {
+            throw new Exception("Не удалось обновить счетчик категории");            
+        }
+        return $success;
+    }
+    
     public function addPost($input)
     {
         extract($input);
@@ -216,6 +257,17 @@ ON pt.tag_id=t.id WHERE t.name = :tag AND p.status= :status) GROUP BY p.id ORDER
         }
          * 
          */
+        
+        try {
+        $this->dbh->beginTransaction();
+        
+        if ( ! $this->doesCategoryExist($category) ) {
+            //begin transaction here?
+            $this->createCategory($category);
+        } 
+        $this->incrementCategoryCounter($category);
+        
+        
         $body = $this->cutBody($body);
         
         $parsedown = new Parsedown();
@@ -228,11 +280,12 @@ ON pt.tag_id=t.id WHERE t.name = :tag AND p.status= :status) GROUP BY p.id ORDER
          $body['endingHtml'] = $endingHtml;
         
         $data = array_merge(array(
+                'category'=>$category,
                 'status'=>$status, 
                 'author'=>$user,
                 'title'=>$title,), $body);
-        try {
-        $this->dbh->beginTransaction();
+        //try {
+        //$this->dbh->beginTransaction();
         $sth=$this->doStatement(self::$addPost, $data);
         
         if ( ! $postId=$this->dbh->lastInsertId() ) {
@@ -427,6 +480,12 @@ ON pt.tag_id=t.id WHERE t.name = :tag AND p.status= :status) GROUP BY p.id ORDER
             $this->error = $e->getMessage();
             return false;
         }
+    }
+    
+    public function getCategories()
+    {
+        $categories = $this->doStatement(self::$categories)->fetchAll(PDO::FETCH_ASSOC);
+        return $categories;
     }
     
 }

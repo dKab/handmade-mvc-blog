@@ -8,6 +8,7 @@
     </db>
     <post>
         <cut>#cut#</cut>
+        <defaultCategory>Разное</defaultCategory>
     </post>
     <pagination>
         <posts>

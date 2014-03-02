@@ -76,8 +76,11 @@ class AdminController extends Controller
     
     protected function addAction()
     {
+        $model = new PostManager();
+        $categories = $model->getCategories();
         $this->render('add_post.html.twig', array(
             'title'=>'Новая запись',
+            'categories'=>$categories,
         ));
     }
     
@@ -93,6 +96,21 @@ class AdminController extends Controller
                 }
                 exit();
         }
+        
+        $defaultCategory = AppHelper::instance()->getDefaultCategory();
+        
+        if ( isset($_POST['category_type']) && ($_POST['category_type'] =="new_category") ) {
+            $category = (isset($_POST['new_category']) && ( ! empty($_POST['new_category']) ) ) ? 
+                    $_POST['new_category'] : $defaultCategory; 
+        } elseif (isset($_POST['category_type']) && ($_POST['category_type'] =="categories") ) {
+            $category = (isset($_POST['new_category']) && ( ! empty($_POST['categories']) ) ) ?
+                    $_POST['categories'] : $defaultCategory;
+        } elseif ( isset($_POST['new_category']) && (! empty($_POST['new_category']) ) ) {
+            $category = $_POST['new_category'];
+        } else {
+            $category = $defaultCategory;
+        }
+        
                 
         $trusty = filter_input_array(INPUT_POST , array(
                 'status'=>array(
@@ -119,8 +137,19 @@ class AdminController extends Controller
                     'options'=>array('min_range'=>1)
                 )));
                        
-         $input = array_merge($_POST, $trusty);
+         $fields = array('title', 'body', 'status', 'tags');
+         $post = array();
+         array_walk($_POST, function($val, $key) use (&$post, $fields) {
+            if ( in_array($key, $fields)) {
+                $post[$key]=$val;
+            }
+        });
+        $input= array_merge($post, $trusty);               
+                       
+        // $input = array_merge($_POST, $trusty);
          $input['user'] = $_SESSION['user'];
+         
+         $input['category'] = $category;
          /*
          echo "<pre>";
          print_r($input);

@@ -24,7 +24,7 @@
 {% block content %}
 
 <form action="/admin/manage" method="GET">
-            <label for="status">Показать</label>
+            <label for="status">Статус</label>
             <select name="status">
             <option value="">Все</option>
             {% macro statuses(status) %}
@@ -51,6 +51,9 @@
             Заголовок
         </th>
         <th>
+            Категория
+        </th>
+        <th>
             Время создания
         </th>
         <th>
@@ -67,6 +70,9 @@
     <tr>
         <td>
             {{ post.title }}
+        </td>
+        <td>
+            {{ post.category }}
         </td>
         <td>
             {{ post.create_time|date('d/m/Y') }}

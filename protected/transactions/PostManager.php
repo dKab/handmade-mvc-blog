@@ -25,16 +25,18 @@ class PostManager extends Transaction {
     
     private static $incrementCategory = "UPDATE categories SET num_posts=num_posts+1 WHERE name=:category";
     
-    private static $decrementCategory = "UPDATE categories SET num_posts=num_posts-1 WHERE name=:category";
+    private static $decrementCategory = "UPDATE categories SET num_posts=num_posts-1 WHERE name=:category AND num_posts > 0";
+    
+    private static $getCategory = "SELECT category FROM posts WHERE id=:id";
  
-    private static $getShallow = "SELECT p.id, p.title, p.create_time, p.edit_time, p.status, lookup.name, lookup.position
+    private static $getShallow = "SELECT p.id, p.title, p.category, p.create_time, p.edit_time, p.status, lookup.name, lookup.position
             FROM posts  p JOIN lookup ON p.status = lookup.code
             WHERE lookup.type = 'Post type'
             ORDER BY lookup.position asc, p.create_time desc";
     
-    private static $categories = "SELECT name FROM categories";
+    private static $categories = "SELECT * FROM categories";
     
-    private static $getSelectivelyShallow = "SELECT p.id, p.title, p.create_time, p.edit_time, p.status, lookup.name, lookup.position
+    private static $getSelectivelyShallow = "SELECT p.id, p.title, p.category, p.create_time, p.edit_time, p.status, lookup.name, lookup.position
             FROM posts  p JOIN lookup ON p.status = lookup.code
             WHERE lookup.type = 'Post type' AND p.status=:status
             ORDER BY lookup.position asc, p.create_time desc";
@@ -52,7 +54,7 @@ class PostManager extends Transaction {
     private static $update = "UPDATE posts SET
                        author = :author,
                        title = :title, begining = :begining, ending=:ending, edit_time = NOW(),
-                       status = :status, begining_html=:beginingHtml, ending_html=:endingHtml WHERE id=:id";
+                       status = :status, begining_html=:beginingHtml, ending_html=:endingHtml, category=:category WHERE id=:id";
     
     private static $delete = 'DELETE FROM posts WHERE id=:id';
     
@@ -118,7 +120,7 @@ ON pt.tag_id=t.id WHERE t.name = :tag AND p.status= :status) GROUP BY p.id ORDER
                                   p.status = l.code WHERE l.type = 'Post type'  
                                   AND p.id=:id";
     */
-    private static $getRaw = "SELECT p.id, p.title, p.begining, p.ending, p.status, 
+    private static $getRaw = "SELECT p.id, p.title, p.begining, p.ending, p.status, p.category, 
                                   l.name as name FROM posts p JOIN lookup l ON
                                   p.status = l.code WHERE l.type = 'Post type'  
                                   AND p.id=:id";
@@ -242,6 +244,14 @@ ON pt.tag_id=t.id WHERE t.name = :tag AND p.status= :status) GROUP BY p.id ORDER
             throw new Exception("Не удалось обновить счетчик категории");            
         }
         return $success;
+    }
+    
+    private function getCategory($id)
+    {
+         if ( ! $curCategory = $this->doStatement(self::$getCategory, array('id'=>$id))->fetchColumn() ) {
+                throw new Exception("Не удалось получить текущую категорию");
+         }
+         return $curCategory;
     }
     
     public function addPost($input)
@@ -412,10 +422,20 @@ ON pt.tag_id=t.id WHERE t.name = :tag AND p.status= :status) GROUP BY p.id ORDER
             'author'=>$user,
             'status'=>$status,
             'id'=>$id,
+            'category'=>$category,
         ), $body);
         
         $this->dbh->beginTransaction();
         try {
+            $curCategory = $this->getCategory($id);
+            if ( ! $this->doesCategoryExist($category) ) {
+                $this->createCategory($category);
+            } 
+            if ( $curCategory != $category ) {
+                $this->decrementCategoryCounter($curCategory);
+                $this->incrementCategoryCounter($category);
+            }
+            
             $sth = $this->doStatement(self::$update, $data);
       
             $this->removeTags($id);
@@ -467,7 +487,8 @@ ON pt.tag_id=t.id WHERE t.name = :tag AND p.status= :status) GROUP BY p.id ORDER
         $this->dbh->beginTransaction();
         try {
             $this->removeTags($id);
-            
+            $category = $this->getCategory($id);
+            $this->decrementCategoryCounter($category);
             $success = $this->doStatement(self::$delete, array('id'=>$id))
                 ->rowCount();
             if ( ! $success ) {
@@ -482,9 +503,14 @@ ON pt.tag_id=t.id WHERE t.name = :tag AND p.status= :status) GROUP BY p.id ORDER
         }
     }
     
-    public function getCategories()
+    public function getCategories($notEmpty=false)
     {
-        $categories = $this->doStatement(self::$categories)->fetchAll(PDO::FETCH_ASSOC);
+        $query = self::$categories;
+        if ( $notEmpty ) {
+            $clause = " WHERE num_posts > 0";
+            $query .= $clause;
+        }
+        $categories = $this->doStatement($query)->fetchAll(PDO::FETCH_ASSOC);
         return $categories;
     }
     

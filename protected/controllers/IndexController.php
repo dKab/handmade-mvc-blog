@@ -22,10 +22,13 @@ class IndexController extends Controller
         //var_dump($parsedown);
         
         //$beginingHtml = $parsedown->parse($post['begining']);
+        $notEmpty = true;
+        $categories = $model->getCategories($notEmpty);
         
         $this->render("posts.html.twig", array(
             'posts'=>$posts,
             'title'=>$title,
+            'categories'=>$categories,
             //'beginingHtml'=>$beginingHtml,
         )); 
     }
@@ -128,4 +131,5 @@ class IndexController extends Controller
             exit();
         }
     }
+    
 }

@@ -1,0 +1,18 @@
+{% extends "main.html.twig" %}
+{% block styles %}
+ {{ parent() }}
+<link rel="stylesheet" href="/css/2-columns.css">
+{% endblock %}
+
+{% block sidebar %}
+            {% if categories is not empty %}
+            Категории:
+            <ul>
+                {% for c in categories %}
+                <li>
+                    <a href="{{ "/" ~ controller ~ "/list?category=" ~ c.name }}">{{ c.name ~ " - " ~ c.num_posts }}</a>
+                </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+{% endblock %}

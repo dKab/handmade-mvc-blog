@@ -1,0 +1,31 @@
+          html, body {
+              height:100%;
+              margin: 0;
+              padding: 0;
+            }
+            #wrapper {
+               /* overflow: hidden; */
+               /* position: relative;*/
+                width: 980px;
+                margin: auto;
+                padding: 0;
+                height: 100%;
+            }
+            #content, #sidebar, #wrapper {
+                box-sizing: border-box;
+                -webkit-box-sizing: border-box;
+            }
+            #content {
+                float: left;
+                width: 740px;
+                padding-right: 20px;
+            }
+            #sidebar {
+                width: 200px;
+                margin-left: 760px;
+                background:  #CCC;
+                border-left: 1px solid maroon;
+               /* bottom: 0;*/
+                height: 100%;
+                padding: 10px;
+            }

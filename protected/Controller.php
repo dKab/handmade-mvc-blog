@@ -87,17 +87,21 @@ abstract class Controller
            throw new NotFoundException("couldn't found requested post" . $id);
             //echo "not found!";
         }
-        
+       
         require_once('recaptchalib.php');
         $publickey = "6LdBU-8SAAAAAMcosmNtVcdNq03HBNWaO5YmHByT";
         $recaptcha= recaptcha_get_html($publickey);
         //echo recaptcha_get_html($publickey);
+        
+         $notEmpty = ($this instanceof AdminController)? false : true;
+         $categories = $model->getCategories($notEmpty);
         
         //echo $parsedown->parse('Hello _Parsedown_!'); # prints: <p>Hello <em>Parsedown</em>!</p>
         //exit();
         $this->render('post.html.twig', array(
             'post'=>$post,
             'comments'=>$comments,
+            'categories'=>$categories,
             //'beginingHtml'=>$beginingHtml,
             //'endingHtml'=>$endingHtml,
             'recaptcha'=>$recaptcha));

@@ -2,33 +2,14 @@
 
 {% block javascript %}
     {{ parent() }}
-    <script type="text/javascript">
-        $(function() {
-            var $new = $('input[name="new_category"]');
-            var $existing = $('select[name="categories"]');
-            var $radio = $('input[name="category_type"]');
-            
-            if ($radio && $radio.val() === 'categories') {
-                $new.hide();
-            }
-            
-            $radio.on('change', function(){
-               if ($(this).val() === "new_category") {
-                       $existing.val('').hide();
-                       $new.show();
-               } else if ($(this).val() === 'categories') {
-                   $existing.show();
-                   $new.val(null).hide();
-               }
-           });
-        });    
-    </script>
+ <script type="text/javascript" src="/javascript/add_edit.js"></script>
 {% endblock %}
 
 {% block content %}
     <form method="POST" action="/admin/store">
         
-       {% macro post(categories, title, body, tags, status) %}
+       {% macro post(categories, title, body, tags, status, curCategory) %}
+        {% set curCategory = curCategory|default(null) %}
         <label for="category">Категория:</label><br>
         {% if categories is not empty %}
             <input type="radio" name="category_type" value="categories" checked>Выбрать из существующих категорий
@@ -37,7 +18,7 @@
             <select name="categories">
                 <option value="">Выберите категорию</option>
                 {% for category in categories %}
-                    <option value="{{ category.name }}">{{ category.name }}</option>
+                    <option value="{{ category.name }}" {% if curCategory == category.name %} selected="selected" {% endif %}>{{ category.name ~ '(' ~ category.num_posts ~ ')' }}</option>
                 {% endfor %}
             </select>
         {% endif %}

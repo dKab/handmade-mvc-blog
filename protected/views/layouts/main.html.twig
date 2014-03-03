@@ -14,8 +14,23 @@
         <meta name="viewport" content="width=device-width">
         {% block styles %}
         <style type="text/css">
+            #nav { 
+                background: #CCC;
+                padding: 20px;
+                margin-bottom: 10px;
+            }
             #nav li {
                 display: inline;
+            }
+            #footer {
+                margin-top: 10px;
+                clear: both;
+                background: silver;
+            }
+            ul {
+                list-style: none;
+                margin: 0;
+                padding: 0;
             }
         </style>
         {% endblock %}
@@ -38,7 +53,8 @@
                     {% endif %}
                 </ul>
         </div>
-        <div id="content">
+        <div id="wrapper">
+          <div id="content">
             {% if user is not defined %}
             Приветствую вас в своём крутейшем бложике!!!
             {% endif %}
@@ -51,9 +67,12 @@
                 
             {% block content %}
             {% endblock %}
+          </div>
+             <div id="sidebar">
+         {% block sidebar %}
+         {% endblock %}
+                 </div>
         </div>
-        <div id="sidebar">
-         </div>
         <div id="footer" style="height: 50px; text-align: center;">
             footer
         </div>

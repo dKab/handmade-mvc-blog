@@ -34,12 +34,15 @@ class AdminController extends Controller
             $title = "Все записи";
         }
         
+        $categories = $model->getCategories();
+        
         //$parsedown = new Parsedown();
         //$beginingHtml = $parsedown->parse($post['begining']);
         
         $this->render("posts.html.twig", array(
             'posts'=>$posts,
             'title'=>$title,
+            'categories'=>$categories,
             //'beginingHtml'=>$beginingHtml,
         )); 
     }
@@ -164,7 +167,7 @@ class AdminController extends Controller
              $success = $model->editPost($input);
              if ( ! $success ) {
                  $_SESSION['feedback'] = $model->getError();
-                 header("Location: /admin/edit?id={$id}");
+                 header("Location: /admin/edit?id={$input['id']}");
                  exit();
              } 
          } else {
@@ -248,6 +251,7 @@ class AdminController extends Controller
     {
         $id = filter_input(INPUT_GET, "id", FILTER_VALIDATE_INT);
         $model = new PostManager();
+        $categories = $model->getCategories();
         $post = $model->getPost($id, true);
         if ( ! $post ) {
            throw new NotFoundException("couldn't find requested post" . $id);
@@ -256,6 +260,7 @@ class AdminController extends Controller
         $this->render('edit.html.twig', array(
            'post'=>$post,
             'title'=>'Редактировать запись',
+            'categories'=>$categories,
         ));
     }
     
@@ -350,4 +355,5 @@ class AdminController extends Controller
         header('Location: /admin/approveComments');
         exit();
     }
+    
 }

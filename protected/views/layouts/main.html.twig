@@ -14,8 +14,18 @@
         <meta name="viewport" content="width=device-width">
         {% block styles %}
         <style type="text/css">
+            html, body {
+              height:100%;
+              margin: 0;
+              padding: 0;
+              background: cornsilk;
+            }
+            .post_title {
+                font-size: 1.5em;
+            }
+            
             #nav { 
-                background: #CCC;
+                background-color: wheat;
                 padding: 20px;
                 margin-bottom: 10px;
             }
@@ -23,15 +33,68 @@
                 display: inline;
             }
             #footer {
-                margin-top: 10px;
                 clear: both;
-                background: silver;
+                width:100%;
+                height:50px; 
+                background-color: wheat;
+                color: maroon;
+               /* padding-top: 20px; */
             }
             ul {
                 list-style: none;
                 margin: 0;
                 padding: 0;
             }
+            a {
+                text-decoration: none;
+                color: maroon;
+            }
+            a:hover {
+                text-decoration: underline;
+            }
+            a:visited {
+                color: maroon;
+            }
+            body {
+                font-family: Century-gothic, sans-serif;
+            }
+            hr {
+                border: none;
+                height: 1px;
+                background: lightgray;
+            }
+            .time {
+                float: right;
+                font-size: smaller;
+                color: grey;
+                font-style: italic;
+            }
+            .comments_count {
+                float: right;
+                color: grey;
+                font-style: italic;
+            }
+            #pagination {
+                margin: 10px;
+                float: right;
+            }
+            #pagination ul {
+            list-style: none;
+        }
+        #pagination li {
+            display: inline;
+        }
+        #content {
+            width: 980px;
+            margin: auto;
+        }
+        .page-buffer {
+	height: 50px;
+}
+#wrapper {
+    margin-bottom: -50px;
+    min-height: 100%;
+}
         </style>
         {% endblock %}
         
@@ -42,7 +105,7 @@
     <body>
         <div id="nav">
                 <ul style="list-style: none">
-                    <li><a href="{{ "/" ~ controller }}">Все записи</a></li> | 
+                    <li><a href="{{ "/" ~ controller }}">Главная</a></li> | 
                     {% if user is defined %}
                         <li><a href="/admin/add">Добавить запись</a></li> | 
                         <li><a href="/admin/manage">Управление записями</a></li> | 
@@ -54,17 +117,14 @@
                 </ul>
         </div>
         <div id="wrapper">
-          <div id="content">
-            {% if user is not defined %}
-            Приветствую вас в своём крутейшем бложике!!!
-            {% endif %}
-            
-            <h2>{{ block('title') }}</h2>
-            
-            {% if feedback is defined %}
+          <div id="content">                
+            {% block header  %}
+                <h3 style="font-weight: normal; color: gray;">{{ block('title') }} {% if total is defined %} ({{ total }}) {% endif %}</h3>
+            {% endblock %}
+              
+              {% if feedback is defined %}
                 {{ feedback }} <br />
-            {% endif %}
-                
+                            {% endif %}
             {% block content %}
             {% endblock %}
           </div>
@@ -72,9 +132,10 @@
          {% block sidebar %}
          {% endblock %}
                  </div>
+            <div class='page-buffer'></div>
         </div>
         <div id="footer" style="height: 50px; text-align: center;">
-            footer
+            {{ "now"|date("Y") }}
         </div>
     </body>
 </html>

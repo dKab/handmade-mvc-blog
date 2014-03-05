@@ -1,31 +1,49 @@
 {% extends "2_columns.html.twig" %}
 {% block title %} {{ title }} {% endblock %}
+
+{% block header %}
+<h1 style="font-family: Arial; font-weight: normal;"> {Блог одной тян} </h1>
+    {% if title is defined %}
+        {{ parent() }}
+    {% endif %}
+{% endblock %}
 {% block content %}
+
   {% if posts is not empty %}
         <ul>
     {% for post in posts %}
+            {% set link = "/" ~ controller ~ "/view?id=" ~ post.id %}
             <li>
-                <h2>{{ post.title }}</h2><br />
+                            <hr>
+                <a href="{{ link }}" class="post_title">{{ post.title }}</a>
                 {% if user is defined and user is not empty %}
                 <div class="post_status">Статус: {{ post.name }}</div>
                 {% endif %}
-                       Опубликовано: 
-                            {{ post.create_time }} <br />
-                       Комментариев: {{ post.comments|default(0) }} <br />
+                <span class="time">{{ post.create_time|date('d.m.Y') }}</span>
                  {% autoescape false %}
-                     {{ post.begining_html }}...
+                     {{ post.begining_html }}
                  {% endautoescape %}
-                 <a href="{{ "/" ~ controller ~ "/view?id=" ~ post.id }}">(показать полностью)</a><br />
+                <a href="{{ link }}">Читать дальше&rarr;</a><br><br>
                     Тэги: {% for tag in post.tags %}
                               <a href="{{ "/" ~ controller ~ "/list?tag=" ~ tag }}">{{ tag }}</a> 
                           {% endfor %}
+                    <span class="comments_count">  Комментариев: {{ post.comments|default(0) }} </span>
             </li>
-            <br /><hr />
     {% endfor %}
         </ul>
+<hr><br>
+ {% import 'manage.html.twig' as manage %}
+  {{ manage.pagination(page, limit, lastPage, curURL, query) }}
+
   {% else %}
         <p>
-            Публикаций пока нет.
+            {% if user is defined and category is not empty %}
+                В данной категории в настоящее время нет ни одной записи. 
+                Может быть <a href="{{ "/" ~ controller ~ "/deleteCategory?name=" ~ category }}">удалить</a>
+                эту категорию ("{{ category }}")?
+            {% else %}
+                Публикаций пока нет.
+            {% endif %}
         </p>  
   {% endif %}
 {% endblock content %}

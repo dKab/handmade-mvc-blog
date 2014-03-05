@@ -8,29 +8,96 @@ class IndexController extends Controller
     
     protected function listAction()
     {
+        $model = new PostManager();
+        //$posts = $model->getPartial($offset, $limit, $status);
+        
+        //var_dump($offset);
+        //var_dump($limit);
+        //var_dump($posts);
+        /*
+        echo "<pre>";
+        print_r($_SERVER);
+        echo "</pre>";
+        */
+       // $curURL = substr($_SERVER['REQUEST_URI'], 0, $)$_SERVER['REQUEST_URI'];
+        //$route=$_SERVER['REQUEST_URI'];
+        $route = AppHelper::instance()->getRequest()->getRoute(true);
+        if (mb_strlen($route) <= 1) {
+            $route="/index/list";
+        }
+        //var_dump($route);
+        $query=$_SERVER['QUERY_STRING'];
+        
+        if (! empty($query) ) {
+            if ( mb_strpos($query, "page") !== false ) {
+                $query = mb_substr($query, 0, mb_strpos($query, "&"));
+            }
+        }
+        $route .= "?" . $query;
+        
+        
         //$tag = AppHelper::instance()->getRequest()->properties['tag'];
         $tag = filter_input(INPUT_GET, "tag", FILTER_SANITIZE_STRING);
-        $model = new PostManager();
+        $category = filter_input(INPUT_GET, "category", FILTER_DEFAULT);
+        
+        //var_dump($category);
         if ( $tag ) {  
-            $posts = $model->hasTag($tag, PostManager::PUBLISHED);
+           
             $title = "Записи с тэгом '{$tag}'";
+            $total = $model->countPostsByTag($tag, PostManager::PUBLISHED);
+            //var_dump($posts);
+        } elseif ($category) {
+            
+            $title="Записи в категории {$category}";
+            $total = $model->countPostsByCategory($category, PostManager::PUBLISHED);
+                       // var_dump($posts);
         } else {
-            $posts = $model->getPublished();
-            $title = "Все записи";
+
+            $total = $model->countTotal(PostManager::PUBLISHED);
         }
+        
+       // $total = $model->countTotal(PostManager::PUBLISHED);
+        //var_dump($total);
+        $limit = AppHelper::instance()->postsPerPage();
+        $lastPage = $pagesNum = ceil($total/$limit);
+        //var_dump($lastPage);
+        if ( ! filter_has_var(INPUT_GET, 'page') ) {
+            $page = 1;
+        } else {
+            $page = filter_input(INPUT_GET, 'page', FILTER_VALIDATE_INT, array(
+                'min_range'=>1,
+                'max_range'=>$lastPage));
+        }
+        $offset = ($page-1) * $limit; 
        // $parsedown = new Parsedown();
         //var_dump($parsedown);
-        
         //$beginingHtml = $parsedown->parse($post['begining']);
         $notEmpty = true;
         $categories = $model->getCategories($notEmpty);
         
-        $this->render("posts.html.twig", array(
-            'posts'=>$posts,
-            'title'=>$title,
-            'categories'=>$categories,
-            //'beginingHtml'=>$beginingHtml,
-        )); 
+        
+        
+        if ( $tag ) {
+             $posts = $model->hasTag($tag, $offset, $limit, PostManager::PUBLISHED);
+        } elseif ( $category ) {
+            $posts = $model->getByCategory($category, $offset, $limit, PostManager::PUBLISHED);
+        } else {
+            $posts = $model->getPublished($offset, $limit);
+        }
+         
+        $data = array('posts'=>$posts, 'categories'=>$categories);
+        if (isset($title)) {
+            $data['title'] = $title;
+        }
+            $data['query']=$query;
+            $data['lastPage']=$lastPage;
+            $data['limit']=$limit;
+            $data['page']=$page;
+            $data['curURL']=$route;
+            $data['total']=$total;
+        
+        $this->render("posts.html.twig", $data);
+            //'beginingHtml'=>$beginingHtml,); 
     }
     
     protected function loginAction()
@@ -108,8 +175,9 @@ class IndexController extends Controller
                 $post[$key]=$val;
             }
         });
+        
         $comment= array_merge($post, $input);
-
+         $comment['admin'] = 0;
         if ( ! $input['email'] ) {
             $_SESSION['feedback'] = "Еmail должен быть корректным е-mail адресом";
             header("Location: /index/view?id={$id}");

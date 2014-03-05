@@ -12,7 +12,7 @@
     </post>
     <pagination>
         <posts>
-            <limit>10</limit>
+            <limit>3</limit>
         </posts>
         <comments>
             <limit>25</limit>
@@ -21,4 +21,10 @@
     <comments>
         <moderate>0</moderate>
     </comments>
+    <user>
+        <pusya>
+            <sign>Та самая тян</sign>
+            <email>pusya@test.com</email>
+        </pusya>
+    </user>
 </root>

@@ -6,8 +6,8 @@ class CommentManager extends Transaction
     const APPROVED = 2;
     
     private static $add = 'INSERT INTO comments 
-        (post_id, parent_id, email, name, body, path, notify_reply, time, status)
-        VALUES(:postId, :parentId, :email, :name, :body, :path, :notify, NOW(), :status)';
+        (post_id, parent_id, email, name, body, path, notify_reply, time, status, admin)
+        VALUES(:postId, :parentId, :email, :name, :body, :path, :notify, NOW(), :status, :admin)';
     
     private static $countOrphans = "SELECT child_comments FROM posts WHERE id = :post";
     private static $countSiblings = "SELECT children FROM comments WHERE id=:id";
@@ -92,6 +92,11 @@ class CommentManager extends Transaction
          if ( is_null($comment['notify']) ) {
              $comment['notify'] = 0;
          }
+         
+        if (isset($_SESSION['user'])) {
+            $comment['status'] = self::APPROVED;
+        }
+         
          $this->dbh->beginTransaction();
          try {
              $sth = $this->doStatement(self::$add, $comment);

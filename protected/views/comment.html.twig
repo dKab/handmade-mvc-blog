@@ -1,5 +1,5 @@
 {% set level = comment.path|split('.')|length %}
-<div class="comment" id="{{ comment.id }}" style="margin-left: {{ (level-2)*20 }}px; {% if level>2 %} border-left: 1px solid silver; {% endif %} ">
+<div class="comment {{ (comment.admin == 1)? "admin" : "" }} {% if comment.parent_id is not empty %} answer {% endif %}" id="{{ comment.id }}" style="margin-left: {{ (level-2)*20 }}px; {% if level>2 %} border-left: 1px solid silver; {% endif %} ">
     <div class="comment_head">
         <span class="name">
             {{ comment.name }}

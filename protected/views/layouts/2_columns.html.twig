@@ -6,7 +6,7 @@
 
 {% block sidebar %}
             {% if categories is not empty %}
-            Категории:
+<p style="font-size: larger; background: wheat; margin-top: 0; padding: 5px;">  категории </p>
             <ul>
                 {% for c in categories %}
                 <li>
@@ -14,5 +14,6 @@
                 </li>
                 {% endfor %}
             </ul>
+<hr>
         {% endif %}
 {% endblock %}

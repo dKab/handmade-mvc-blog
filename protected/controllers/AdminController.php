@@ -23,28 +23,101 @@ class AdminController extends Controller
     protected function listAction()
     {
         //$tag = AppHelper::instance()->getRequest()->properties['tag'];
+        $model = new PostManager();
+        $route = AppHelper::instance()->getRequest()->getRoute(true);
+        $query=$_SERVER['QUERY_STRING'];
+        
+        if (! empty($query) ) {
+            if ( mb_strpos($query, "page") !== false ) {
+                $query = mb_substr($query, 0, mb_strpos($query, "&"));
+            }
+        }
+        $route .= "?" . $query;
         
         $tag = filter_input(INPUT_GET, "tag", FILTER_SANITIZE_STRING);
+        $category = filter_input(INPUT_GET, "category", FILTER_DEFAULT);
+        //var_dump($category);
+        if ( $tag ) {       
+            $title = "Записи с тэгом '{$tag}'";
+            $total = $model->countPostsByTag($tag);
+            //var_dump($posts);
+        } elseif ($category) {
+            
+            $title="Записи в категории {$category}";
+            $total = $model->countPostsByCategory($category);
+                       // var_dump($posts);
+        } else {
+            $total = $model->countTotal();
+        }
+        
+        $limit = AppHelper::instance()->postsPerPage();
+        $lastPage = $pagesNum = ceil($total/$limit);
+        //var_dump($lastPage);
+        if ( ! filter_has_var(INPUT_GET, 'page') ) {
+            $page = 1;
+        } else {
+            $page = filter_input(INPUT_GET, 'page', FILTER_VALIDATE_INT, array(
+                'min_range'=>1,
+                'max_range'=>$lastPage));
+        }
+        $offset = ($page-1) * $limit;
+        
+        if ( $tag ) {
+             $posts = $model->hasTag($tag, $offset, $limit);
+        } elseif ( $category ) {
+            $posts = $model->getByCategory($category, $offset, $limit);
+        } else {
+            $posts = $model->getAllPosts($offset, $limit);
+        }
+        
+        
+        
+        
+        /*
+        $tag = filter_input(INPUT_GET, "tag", FILTER_SANITIZE_STRING);
+        $category = filter_input(INPUT_GET, 'category', FILTER_DEFAULT);
         $model = new PostManager();
         if ( $tag ) {  
             $posts = $model->hasTag($tag);
             $title = "Записи с тэгом '{$tag}'";
+        } elseif ($category) {
+            $posts = $model->getByCategory($category);
+            $title="Записи в категории {$category}";
         } else {
             $posts = $model->getAllPosts();
             $title = "Все записи";
         }
+        */
+        
         
         $categories = $model->getCategories();
+        
+       $data = array('posts'=>$posts, 'categories'=>$categories);
+        if (isset($title)) {
+            $data['title'] = $title;
+        }
+        /*
+        $data['query']=$query;
+            $data['lastPage']=$lastPage;
+            $data['limit']=$limit;
+            $data['page']=$page;
+            $data['curURL']=$route;
+            $data['total']=$total;
+        */
+        $data = array_merge($data, array(
+            'query'=>$query,
+            'lastPage'=>$lastPage,
+            'limit'=>$limit,
+            'page'=>$page,
+            'curURL'=>$route,
+            'total'=>$total,
+            'category'=>$category,
+        ));
         
         //$parsedown = new Parsedown();
         //$beginingHtml = $parsedown->parse($post['begining']);
         
-        $this->render("posts.html.twig", array(
-            'posts'=>$posts,
-            'title'=>$title,
-            'categories'=>$categories,
-            //'beginingHtml'=>$beginingHtml,
-        )); 
+        $this->render("posts.html.twig", $data); 
     }
     
     protected function getFeedback() {
@@ -203,7 +276,6 @@ class AdminController extends Controller
                 'max_range'=>$lastPage));
         }
         $offset = ($page-1) * $limit; 
-        
         $posts = $model->getPartial($offset, $limit, $status);
         
         //var_dump($offset);
@@ -218,7 +290,7 @@ class AdminController extends Controller
         //$route=$_SERVER['REQUEST_URI'];
         $route = AppHelper::instance()->getRequest()->getRoute(true);
         $query=$_SERVER['QUERY_STRING'];
-        
+        var_dump($query);
         if (! empty($query) ) {
             if ( mb_strpos($query, "page") !== false ) {
                 $query = mb_substr($query, 0, mb_strpos($query, "&"));
@@ -354,6 +426,78 @@ class AdminController extends Controller
         }
         header('Location: /admin/approveComments');
         exit();
+    }
+    
+    protected function deleteCategoryAction()
+    {
+        $category =  filter_input(INPUT_GET, 'name', FILTER_DEFAULT);
+        $model=new PostManager();
+        $success = $model->deleteCategory($category);
+        if ( ! $success) {
+            $_SESSION['feedback'] = "Не удалось удалить категорию";
+            header("Location: /admin/list?category={$category}");
+        }
+        $_SESSION['feedback'] = "Категория успешно удалена!";
+        header("Location: /admin/list");
+    }
+    
+    protected function commentAction()
+    {
+                $input = filter_input_array(INPUT_POST, array(
+                  'parentId'=>array(
+                      'filter'=>FILTER_VALIDATE_INT,
+                      'flags'=>FILTER_NULL_ON_FAILURE,
+                  ),
+                  'postId'=>array(INPUT_POST, array(
+                      'filter'=>FILTER_VALIDATE_INT,
+                      'flags'=>FILTER_NULL_ON_FAILURE,
+                  ))
+            ));
+        //$id = filter_input(INPUT_POST, 'postId', FILTER_VALIDATE_INT);
+        if ( ! $this->isFilled(array('body', 'postId') ) ) {
+           $_SESSION['feedback'] = "Поля со звёздочкой обязательны";
+            header("Location: /admin/view?id={$input['postId']}");
+            exit();
+        }
+        require_once('recaptchalib.php');
+        $privatekey = "6LdBU-8SAAAAAAF2Bhs95JcYDeVNTaR1fN5NbCM_";
+        $resp = recaptcha_check_answer ($privatekey,
+                                $_SERVER["REMOTE_ADDR"],
+                                $_POST["recaptcha_challenge_field"],
+                                $_POST["recaptcha_response_field"]);
+
+        if (!$resp->is_valid) {
+            $_SESSION['feedback'] = "Вы неверно ввели каптчу. Попробуйте еще раз.";
+            header("Location: /admin/view?id={$input['postId']}");
+            exit();
+        }
+        
+        $fields = array('name', 'body', 'postId', 'parentId');
+        $post = array();
+         array_walk($_POST, function($val, $key) use (&$post, $fields) {
+            if ( in_array($key, $fields)) {
+                $post[$key]=$val;
+            }
+        });
+        $post['name'] = AppHelper::instance()->getUserSign($_SESSION['user']);
+        $post['email'] = AppHelper::instance()->getUserEmail($_SESSION['user']);
+        $post['notify'] = 0;
+        $comment= array_merge($post, $input);
+        $comment['admin'] = 1;
+        $model = new CommentManager();
+        try {
+            $commentId = $model->addComment($comment);
+            $message = 
+                    'Комментарий успешно добавлен!';
+            $_SESSION['feedback'] = $message;
+            header("Location: /admin/view?id={$input['postId']}");
+            exit();
+        } catch (Exception $e) {
+            //do something else on production stage
+            echo $e->getMessage();
+            exit();
+        }
+        
     }
     
 }

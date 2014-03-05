@@ -18,6 +18,15 @@ class PostManager extends Transaction {
            :status
            ORDER BY create_time DESC";
     */
+    private static $countAllPostsWithTag = "SELECT frequency FROM tags WHERE name=:tag";
+    
+    private static $countPostsWithTagAndStatus = "SELECT count(*) FROM posts p join post_tag pt
+                                 on p.id=pt.post_id join tags t on pt.tag_id=t.id 
+                                 where t.name = :tag and p.status = :status";
+    
+    private static $countCategoryAll = "SELECT num_posts FROM categories WHERE name=:category";
+    
+    private static $countCategory = "SELECT count(*) FROM posts WHERE category =:category and status =:status";
     
     private static $findCategory = "SELECT COUNT(*) FROM categories WHERE name=:category";
     
@@ -28,7 +37,24 @@ class PostManager extends Transaction {
     private static $decrementCategory = "UPDATE categories SET num_posts=num_posts-1 WHERE name=:category AND num_posts > 0";
     
     private static $getCategory = "SELECT category FROM posts WHERE id=:id";
- 
+    
+    private static $deleteCategory = "DELETE FROM categories WHERE name=:category AND num_posts = 0";
+    
+    private static $filterByCategoryAndStatus = "SELECT p.id, p.title, p.create_time, p.edit_time, p.status, p.begining_html, GROUP_CONCAT(DISTINCT t.name SEPARATOR ', ') as tags FROM
+                              posts p JOIN post_tag p2t ON p.id=p2t.post_id JOIN tags t
+                              ON p2t.tag_id=t.id WHERE p.id IN
+                              (SELECT p.id FROM posts p JOIN post_tag pt
+                              ON p.id=pt.post_id JOIN tags t
+                              ON pt.tag_id=t.id WHERE %s = :%s AND p.status= :status)
+                              GROUP BY p.id ORDER BY p.create_time desc";
+    /*
+    private static $countFilterByParameterAndStatus = "SELECT COUNT(*) FROM posts p JOIN post_tag p2t ON p.id=p2t.post_id JOIN tags t
+                              ON p2t.tag_id=t.id WHERE p.id IN
+                              (SELECT p.id FROM posts p JOIN post_tag pt
+                              ON p.id=pt.post_id JOIN tags t
+                              ON pt.tag_id=t.id WHERE %s = :%s AND p.status= :status)
+                              GROUP BY p.id";
+ */
     private static $getShallow = "SELECT p.id, p.title, p.category, p.create_time, p.edit_time, p.status, lookup.name, lookup.position
             FROM posts  p JOIN lookup ON p.status = lookup.code
             WHERE lookup.type = 'Post type'
@@ -96,7 +122,7 @@ FROM (SELECT p.*, pc.comments, lookup.name
                                             ON p2l.id=pt.post_id JOIN tags t
                                             ON pt.tag_id = t.id
                                             GROUP BY p2l.id ORDER BY p2l.status, p2l.create_time desc";
-    
+    /*
     private static $findPostsByTagAndStatus = "
 SELECT p.id, p.title, p.create_time, p.edit_time, p.status, p.begining_html, GROUP_CONCAT(DISTINCT t.name SEPARATOR ', ') as tags FROM
 posts p JOIN post_tag p2t ON p.id=p2t.post_id JOIN tags t
@@ -104,7 +130,7 @@ ON p2t.tag_id=t.id WHERE p.id IN
 (SELECT p.id FROM posts p JOIN post_tag pt
 ON p.id=pt.post_id JOIN tags t
 ON pt.tag_id=t.id WHERE t.name = :tag AND p.status= :status) GROUP BY p.id ORDER BY p.create_time desc";
-    
+    */
    private static $findPostsByTag = "SELECT p2l.id, p2l.title, p2l.create_time, p2l.edit_time, p2l.status, 
                                      p2l.begining_html, p2l.name, GROUP_CONCAT(DISTINCT t.name SEPARATOR ', ') as tags FROM
                                       (SELECT posts.*, lookup.name, lookup.position
@@ -114,8 +140,17 @@ ON pt.tag_id=t.id WHERE t.name = :tag AND p.status= :status) GROUP BY p.id ORDER
                                       ON p2t.tag_id=t.id WHERE p2l.id IN 
                                       (SELECT p.id FROM posts p JOIN post_tag pt 
                                       ON p.id=pt.post_id JOIN tags t 
-                                      ON pt.tag_id=t.id WHERE t.name = :tag) GROUP BY p2l.id ORDER BY p2l.status asc, p2l.create_time desc";
-    
+                                      ON pt.tag_id=t.id WHERE %s = :%s) GROUP BY p2l.id ORDER BY p2l.status asc, p2l.create_time desc";
+   /*
+   private static $countPostsByTag = "SELECT COUNT(*) FROM (SELECT posts.*, lookup.name, lookup.position
+                                            FROM posts JOIN lookup ON posts.status = lookup.code
+                                                        WHERE lookup.type = 'Post type') as p2l
+                                            JOIN post_tag p2t ON p2l.id=p2t.post_id JOIN tags t 
+                                      ON p2t.tag_id=t.id WHERE p2l.id IN 
+                                      (SELECT p.id FROM posts p JOIN post_tag pt 
+                                      ON p.id=pt.post_id JOIN tags t 
+                                      ON pt.tag_id=t.id WHERE %s = :%s) GROUP BY p2l.id";
+    */
    /* private static $findPost = "SELECT p.*, l.name as name FROM posts p JOIN lookup l ON
                                   p.status = l.code WHERE l.type = 'Post type'  
                                   AND p.id=:id";
@@ -126,6 +161,7 @@ ON pt.tag_id=t.id WHERE t.name = :tag AND p.status= :status) GROUP BY p.id ORDER
                                   AND p.id=:id";
     private static $getPretty = "SELECT p.id, p.title, p.begining_html,
                                  p.ending_html, p.status, p.child_comments, p.edit_time, p.create_time,
+                                 p.category, 
                                  l.name as name FROM posts p JOIN lookup l ON
                                   p.status = l.code WHERE l.type = 'Post type'  
                                   AND p.id=:id";
@@ -134,9 +170,11 @@ ON pt.tag_id=t.id WHERE t.name = :tag AND p.status= :status) GROUP BY p.id ORDER
     private static $getTags = "SELECT t.name FROM tags t
                                JOIN post_tag p2t ON t.id=p2t.tag_id
                                JOIN posts p ON p2t.post_id=p.id WHERE p.id=:id";
+    
     private static $getComments = "";
     
     private static $countTotal = "SELECT COUNT(*) as total FROM posts";
+    
     private static $countOnly ="SELECT COUNT(*) as total FROM posts WHERE status = :status";
     
     private static $checkTags = "SELECT COUNT(*) as num FROM post_tag WHERE post_id = :id";
@@ -159,15 +197,48 @@ ON pt.tag_id=t.id WHERE t.name = :tag AND p.status= :status) GROUP BY p.id ORDER
         return $posts;
     }
     
-    public function hasTag($tag, $status=null)
+    public function countPostsByTag($tag, $status=null)
     {
+        if ( ! $status) {
+        $total = $this->doStatement(self::$countAllPostsWithTag, array('tag'=>$tag))->fetchColumn();
+        } else {
+            $total = $this->doStatement(self::$countPostsWithTagAndStatus, array(
+                'tag'=>$tag,
+                'status'=>$status,
+                ))->fetchColumn();
+        }
+        return (int) $total;
+    }
+    
+    public function countPostsByCategory($category, $status=null)
+    {
+        if ( ! $status) {
+        $total = $this->doStatement(self::$countCategoryAll, array('category'=>$category))->fetchColumn();
+        } else {
+            $total = $this->doStatement(self::$countCategory, array(
+                'category'=>$category,
+                'status'=>$status,
+                ))->fetchColumn();
+        }
+        return (int) $total;
+    }
+    
+    public function hasTag($tag, $offset, $limit, $status=null)
+    {
+        $limitClause = " LIMIT {$offset}, {$limit}";
+        list($column, $placeholder) = array('t.name', 'tag');
         if ( $status ) {
-            $sth = $this->doStatement(self::$findPostsByTagAndStatus, array(
+            $query = sprintf(self::$filterByCategoryAndStatus, $column, $placeholder);
+            $query .= $limitClause;
+            //$sth = $this->doStatement(self::$findPostsByTagAndStatus, array(
+              $sth = $this->doStatement($query, array(
                 'tag'=>$tag,
                 'status'=>$status,
             ));
         } else {
-            $sth=$this->doStatement(self::$findPostsByTag, array(
+            $query = sprintf(self::$findPostsByTag, $column, $placeholder);
+            $query .= $limitClause;
+            $sth=$this->doStatement($query, array(
                 'tag'=>$tag
                 ));
         }
@@ -182,18 +253,22 @@ ON pt.tag_id=t.id WHERE t.name = :tag AND p.status= :status) GROUP BY p.id ORDER
         return $exists;
     }
     
-    public function getAllPosts()
+    public function getAllPosts($offset, $limit)
     {
-        $ret = array();
-        $sth = $this->doStatement(self::$getAll);
+        $limitClause = " LIMIT {$offset}, {$limit}";
+        $query = self::$getAll . $limitClause;
+        //$ret = array();
+        $sth = $this->doStatement($query);
         $posts = $sth->fetchAll(PDO::FETCH_ASSOC);
         return $this->explodeTags($posts);
     }
     
-    public function getPublished()
+    public function getPublished($offset, $limit)
     {
+        $limitClause = " LIMIT {$offset}, {$limit}";
+        $query = self::$findByStatus . $limitClause;
         $ret = array();
-        $sth = $this->doStatement(self::$findByStatus, array(
+        $sth = $this->doStatement($query, array(
             'status'=>self::PUBLISHED
                 ));
         $posts = $sth->fetchAll(PDO::FETCH_ASSOC);
@@ -411,8 +486,8 @@ ON pt.tag_id=t.id WHERE t.name = :tag AND p.status= :status) GROUP BY p.id ORDER
         $parsedown = new Parsedown();
         //var_dump($parsedown);
         
-         $beginingHtml = $parsedown->parse($body['begining']);
-         $endingHtml = $parsedown->parse($body['ending']);
+         $beginingHtml = $parsedown->parse( htmlspecialchars($body['begining']) );
+         $endingHtml = $parsedown->parse( htmlspecialchars($body['ending']) );
          
          $body['beginingHtml'] = $beginingHtml;
          $body['endingHtml'] = $endingHtml;
@@ -514,4 +589,29 @@ ON pt.tag_id=t.id WHERE t.name = :tag AND p.status= :status) GROUP BY p.id ORDER
         return $categories;
     }
     
+    public function getByCategory($category, $offset, $limit, $status=null)
+    {
+        $limitClause = " LIMIT {$offset}, {$limit}";
+        if ($status) {
+            $query = sprintf(self::$filterByCategoryAndStatus, "p.category", 'category');
+            $query .= $limitClause;
+            $posts = $this->doStatement($query, array(
+                'category'=>$category,
+                'status'=>$status,
+            ))->fetchAll(PDO::FETCH_ASSOC);
+        } else {
+            $query = sprintf(self::$findPostsByTag, "p.category", 'category');
+            $query .= $limitClause;
+            $posts = $this->doStatement($query, array(
+                'category'=>$category
+            ))->fetchAll(PDO::FETCH_ASSOC);
+        }
+        return $this->explodeTags($posts);
+    }
+    
+    public function deleteCategory($category)
+    {
+       $success= $this->doStatement(self::$deleteCategory, array('category'=>$category))->rowCount();
+       return $success;
+    } 
 }

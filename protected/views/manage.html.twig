@@ -4,17 +4,24 @@
 
 {% block styles %}
     <style type="text/css">
-        .pagination ul {
-            list-style: none;
-        }
-        .pagination li {
-            display: inline;
-        }
         td, th {
-            border: 1px solid black;
+            border-right: 1px solid white;
+            padding: 5px;
         }
         table {
                         border-collapse: collapse;
+                        font-size: smaller;
+                        cellpadding: 0.5;
+        }
+        th {
+            background: wheat;
+        }
+        form {
+            margin: 10px;
+        }
+        
+        tr:nth-child(2n+1) {
+            background: wheat;
         }
 
     </style>
@@ -44,23 +51,23 @@
         </select>
             <input type="submit" method="GET" action="/admin/manage" value="применить фильтр">
 </form>
-    
+    {%  set delim = (query is empty) ? "?" : "&"  %}
 <table>
     <tr>
         <th>
-            Заголовок
+            <a href="">Заголовок</a>
         </th>
         <th>
-            Категория
+            <a href="">Категория</a>
         </th>
         <th>
-            Время создания
+            <a href="">Время создания</a>
         </th>
         <th>
-            Редактировался
+            <a href="">Редактировался</a>
         </th>
         <th>
-            Статус
+            <a href="">Статус</a>
         </th>
         <th>
             Действие
@@ -97,7 +104,7 @@
     {% set q = ( query is empty ) ?  "page=" : "&page=" %}
     
     {% if lastPage > 1 %}
-    <div class="pagination">
+    <div id="pagination">
     <ul>
       {% if page > 1 %}
                 <li><a href="{{ curURL ~ q ~ (page - 1) }}">&larr;</a></li>

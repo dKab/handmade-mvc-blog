@@ -1,31 +1,37 @@
-          html, body {
-              height:100%;
-              margin: 0;
-              padding: 0;
-            }
             #wrapper {
                /* overflow: hidden; */
                /* position: relative;*/
                 width: 980px;
-                margin: auto;
-                padding: 0;
-                height: 100%;
+                margin: 0 auto;
+               /* min-height: 100%;*/
+                padding-bottom: 50px;
+                /*height: 100%;*/
+                
             }
-            #content, #sidebar, #wrapper {
+            #content, #sidebar {
                 box-sizing: border-box;
                 -webkit-box-sizing: border-box;
             }
             #content {
                 float: left;
-                width: 740px;
-                padding-right: 20px;
+                width: 740px !important;
+                padding: 0 20px 0 0 !important;
             }
             #sidebar {
                 width: 200px;
                 margin-left: 760px;
-                background:  #CCC;
-                border-left: 1px solid maroon;
-               /* bottom: 0;*/
+                background: white;
+               /*  border-left: 1px solid maroon; */
                 height: 100%;
-                padding: 10px;
+               /* padding: 10px; */
+                border-top: 2px solid maroon;
+                border-left: 1px solid lightgray;
+                border-right: 1px solid lightgray;
+            }
+            #sidebar p {
+                text-align: center;
+                font-family: sans-serif;
+            }
+            #sidebar ul {
+                margin-left: 10px;
             }

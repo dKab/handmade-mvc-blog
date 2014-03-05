@@ -73,6 +73,15 @@ class AppHelper {
     {
         return $this->options->post->defaultCategory;
     }
+    public function getUserSign($user)
+    {
+        return $this->options->user->$user->sign;
+    }
+    
+    public function getUserEmail($user)
+    {
+        return $this->options->user->$user->email;
+    }
     
     public function getCommentRule()
     {

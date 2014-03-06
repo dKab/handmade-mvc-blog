@@ -10,10 +10,20 @@
             <ul>
                 {% for c in categories %}
                 <li>
-                    <a href="{{ "/" ~ controller ~ "/list?category=" ~ c.name }}">{{ c.name ~ " - " ~ c.num_posts }}</a>
+                    <a href="{{ "/" ~ controller ~ "/list?category=" ~ c.name }}">{{ c.name }}</a>
+                    <span class="num_posts">{{ c.num_posts }}</span>
                 </li>
                 {% endfor %}
             </ul>
-<hr>
         {% endif %}
+
+        {% if cloud is not empty %}
+          
+         <p style="font-size: larger; background: wheat; margin-top: 0; padding: 5px;"> облако тэгов </p>
+                  <div id="tag_cloud">
+          {% for name, weight in cloud %}
+         <a href="{{ "/" ~ controller ~ "/list?tag=" ~ name }}" style="font-size: {{ weight }}pt;"> {{ name }}</a>    
+          {% endfor %}
+         </div>
+         {% endif %}
 {% endblock %}

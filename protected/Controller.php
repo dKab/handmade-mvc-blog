@@ -95,6 +95,10 @@ abstract class Controller
         
          $notEmpty = ($this instanceof AdminController)? false : true;
          $categories = $model->getCategories($notEmpty);
+         
+       $cloud = $model->getTagCloud();
+       // var_dump($cloud);
+        //exit();
         
         //echo $parsedown->parse('Hello _Parsedown_!'); # prints: <p>Hello <em>Parsedown</em>!</p>
         //exit();
@@ -102,6 +106,7 @@ abstract class Controller
             'post'=>$post,
             'comments'=>$comments,
             'categories'=>$categories,
+            'cloud'=>$cloud,
             //'beginingHtml'=>$beginingHtml,
             //'endingHtml'=>$endingHtml,
             'recaptcha'=>$recaptcha));

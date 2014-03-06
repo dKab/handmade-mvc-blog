@@ -188,6 +188,11 @@ ON pt.tag_id=t.id WHERE t.name = :tag AND p.status= :status) GROUP BY p.id ORDER
                                   WHERE id IN (SELECT tag_id FROM post_tag WHERE post_id = :id)
                                   AND frequency > 1";
     
+    private static $getPopularTags= "SELECT t.* from tags t
+                   JOIN post_tag pt ON t.id=pt.tag_id
+                   JOIN posts p ON p.id = pt.post_id WHERE p.status =:status GROUP BY t.id
+                   ORDER BY frequency desc";
+    
     private function explodeTags(Array $posts)
     {
         foreach ($posts as $key=>$val) {
@@ -407,6 +412,9 @@ ON pt.tag_id=t.id WHERE t.name = :tag AND p.status= :status) GROUP BY p.id ORDER
              * 
              */
             $this->bindTags($postId, $tags);
+            
+            $uploader = new ImageUploader();
+            $imagesUploaded = $uploader->storeImages($postId);
         } 
         $this->dbh->commit();
         return $postId;
@@ -486,8 +494,8 @@ ON pt.tag_id=t.id WHERE t.name = :tag AND p.status= :status) GROUP BY p.id ORDER
         $parsedown = new Parsedown();
         //var_dump($parsedown);
         
-         $beginingHtml = $parsedown->parse( htmlspecialchars($body['begining']) );
-         $endingHtml = $parsedown->parse( htmlspecialchars($body['ending']) );
+         $beginingHtml = $parsedown->parse( htmlspecialchars($body['begining'], ENT_NOQUOTES) );
+         $endingHtml = $parsedown->parse( htmlspecialchars($body['ending']), ENT_NOQUOTES);
          
          $body['beginingHtml'] = $beginingHtml;
          $body['endingHtml'] = $endingHtml;
@@ -518,6 +526,10 @@ ON pt.tag_id=t.id WHERE t.name = :tag AND p.status= :status) GROUP BY p.id ORDER
             if ( ! empty($tags) ) {
                 $this->bindTags($id, $tags);
             }
+            
+            $uploader = new ImageUploader();
+            $imagesUploaded = $uploader->storeImages($id);
+            
             $this->dbh->commit();
             return $id;
         } catch (Exception $e) {
@@ -613,5 +625,28 @@ ON pt.tag_id=t.id WHERE t.name = :tag AND p.status= :status) GROUP BY p.id ORDER
     {
        $success= $this->doStatement(self::$deleteCategory, array('category'=>$category))->rowCount();
        return $success;
-    } 
+    }
+    
+    public function getTagCloud($limit=20)
+    {
+                $limitClause = " LIMIT {$limit}";
+                $query = self::$getPopularTags . $limitClause;
+                
+                $tags = $this->doStatement($query, array('status'=>self::PUBLISHED))->fetchAll(PDO::FETCH_ASSOC);
+		$total=0;
+		foreach($tags as $item) {
+			$total+=$item['frequency'];
+                }
+		$weights=array();
+		if($total>0)
+		{
+			foreach($tags as $item) {
+                                  $name= $item['name'];
+				  $weights[$name]=8+(int)(128*$item['frequency']/($total+12));
+                        }
+			ksort($weights);
+		}
+		return $weights;
+     }
+    
 }

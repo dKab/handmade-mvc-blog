@@ -96,6 +96,11 @@ class IndexController extends Controller
             $data['curURL']=$route;
             $data['total']=$total;
         
+        $cloud = $model->getTagCloud();
+       // var_dump($cloud);
+        //exit();
+        $data['cloud']= $cloud;
+            
         $this->render("posts.html.twig", $data);
             //'beginingHtml'=>$beginingHtml,); 
     }

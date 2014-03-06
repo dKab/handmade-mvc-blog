@@ -14,6 +14,9 @@
         <meta name="viewport" content="width=device-width">
         {% block styles %}
         <style type="text/css">
+            img {
+                max-width: 100%;
+            }
             html, body {
               height:100%;
               margin: 0;
@@ -34,11 +37,11 @@
             }
             #footer {
                 clear: both;
-                width:100%;
                 height:50px; 
                 background-color: wheat;
                 color: maroon;
                /* padding-top: 20px; */
+ 
             }
             ul {
                 list-style: none;
@@ -134,7 +137,7 @@
                  </div>
             <div class='page-buffer'></div>
         </div>
-        <div id="footer" style="height: 50px; text-align: center;">
+        <div id="footer">
             {{ "now"|date("Y") }}
         </div>
     </body>

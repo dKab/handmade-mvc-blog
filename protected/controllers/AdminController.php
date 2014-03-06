@@ -89,7 +89,6 @@ class AdminController extends Controller
         }
         */
         
-        
         $categories = $model->getCategories();
         
        $data = array('posts'=>$posts, 'categories'=>$categories);
@@ -113,6 +112,10 @@ class AdminController extends Controller
             'total'=>$total,
             'category'=>$category,
         ));
+        $cloud = $model->getTagCloud();
+       // var_dump($cloud);
+        //exit();
+        $data['cloud']= $cloud;
         
         //$parsedown = new Parsedown();
         //$beginingHtml = $parsedown->parse($post['begining']);
@@ -162,6 +165,13 @@ class AdminController extends Controller
     
     protected function storeAction()
     {   
+         /*
+         echo "<pre>";
+         print_r($_FILES);
+         print_r($_POST);
+         echo "</pre>";
+         exit();
+        */
         if ( ! $this->isFilled( array('title', 'body', 'status') ) ) {
                 $_SESSION['feedback'] = "Поля, помеченные звёздочкой должны быть заполнены";
                 if ( filter_has_var(INPUT_POST, 'id') ) {
@@ -232,14 +242,14 @@ class AdminController extends Controller
          echo "</pre>";
          exit();
           * 
-          */
-         
+          */         
          $model = new PostManager();
+
          if ( $input['id'] ) {
              $_SESSION['feedback'] = 'Изменения успешно сохранены!';
              $success = $model->editPost($input);
              if ( ! $success ) {
-                 $_SESSION['feedback'] = $model->getError();
+                 $_SESSION['feedback'] = $model->getError();                 
                  header("Location: /admin/edit?id={$input['id']}");
                  exit();
              } 

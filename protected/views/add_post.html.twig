@@ -6,7 +6,7 @@
 {% endblock %}
 
 {% block content %}
-    <form method="POST" action="/admin/store">
+    <form method="POST" action="/admin/store" enctype="multipart/form-data">
         
        {% macro post(categories, title, body, tags, status, curCategory) %}
         {% set curCategory = curCategory|default(null) %}
@@ -26,15 +26,24 @@
         <label for="title">Заголовок*:</label><br />
         <input type="text" name="title" value="{{ title|default('') }}" size="68"></input><br />
         <label for="body">Содержимое*:</label><br />
-        <textarea cols="59" rows="25" name="body">{{ body|default('') }}</textarea><br />
+        <textarea cols="59" rows="25" name="body">
+        {% autoescape false %}
+            {{ body|default('') }} 
+        {% endautoescape %}
+        </textarea><br />
         <label for="tags">Тэги через запятую</label><br />
         <input type="text" name="tags" value="{{ tags|default('') }}" size="68"></input><br />
         <label for="status">Пометить в группу:</label>
         <select name="status">
            {% import 'manage.html.twig' as input %}
             {{ input.statuses(status|default(null)) }}
-        </select><br />
-        <input type="submit" value="{{ (title is defined and title is not empty )? 'Сохранить изменения' : 'Отправить' }}"></input>
+        </select><br>
+        {% for i in (0..5) %}
+            {% set name = "image[" ~ i ~ "]" %}
+            <label for="{{ name }}" style="margin-top: 10px; display: inline-block;">Изображение {{ i+1 }}</label>
+            <input type="file" name="{{ name }}" size="68"/><br>
+        {% endfor %}
+        <input type="submit" value="{{ (title is defined and title is not empty )? 'Сохранить изменения' : 'Отправить' }}"></input><br>
        {% endmacro %}
         
     {% import _self as form %}

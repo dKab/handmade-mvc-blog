@@ -273,7 +273,16 @@ class AdminController extends Controller
                 'min_range'=>1,
                 'max_range'=>3,
             ));
-        $total = $model->countTotal($status);
+            $category = filter_input(INPUT_GET, 'category', FILTER_DEFAULT, FILTER_NULL_ON_FAILURE);
+            //var_dump($category);
+            
+            $notEmpty = true;
+            $categories = $model->getCategories($notEmpty);
+        try {    
+        $total = $model->countTotal($status, $category);
+        } catch(Exception $e) {
+            echo $e->getMessage();
+        }
         //var_dump($total);
         $limit = AppHelper::instance()->postsPerPage();
         $lastPage = $pagesNum = ceil($total/$limit);
@@ -285,6 +294,9 @@ class AdminController extends Controller
                 'min_range'=>1,
                 'max_range'=>$lastPage));
         }
+        //echo "page:";
+        //var_dump($page);
+        
         $offset = ($page-1) * $limit; 
         $orderby = filter_input(INPUT_GET, 'c', FILTER_DEFAULT, FILTER_NULL_ON_FAILURE);
         $dir = filter_input(INPUT_GET, 'd', FILTER_VALIDATE_INT, array(
@@ -293,13 +305,14 @@ class AdminController extends Controller
        // var_dump($dir);
         //var_dump($orderby);
         try {
-        $posts = $model->getPartial($offset, $limit, $status, $orderby, $dir);
+        $posts = $model->getPartial($offset, $limit, $status, $category, $orderby, $dir);
         } catch (Exception $e) {
             echo $e->getMessage();
         }
         //var_dump($offset);
         //var_dump($limit);
         //var_dump($posts);
+
         /*
         echo "<pre>";
         print_r($_SERVER);
@@ -312,15 +325,25 @@ class AdminController extends Controller
         //var_dump($query);
         
         //var_dump($_SERVER['REQUEST_URI']);
-        var_dump($query);
-        var_dump($route);
+       // var_dump(urldecode($query));
+       // var_dump($route);
         
         if (! empty($query) ) {
             if ( mb_strpos($query, "page") !== false ) {
-                $query = mb_substr($query, 0, mb_strpos($query, "&"));
+               // $query = mb_substr($query, 0, mb_strpos($query, "&"));
+                $query = explode("&", $query);
+                $pageClause = array_pop($query);
+                $query = join("&", $query);
             }
         }
         $route .= "?" . $query;
+        
+        //echo "query: \n";
+        //var_dump($query);
+        
+        //echo "curURL: \n";
+        //var_dump($route);
+        
         $this->render('manage.html.twig', array(
             'title'=>'Страница управления',
             'lastPage'=>$lastPage,
@@ -330,6 +353,8 @@ class AdminController extends Controller
             'posts'=>$posts,
             'query'=>$query,
             'status'=>$status,
+            'category'=>$category,
+            'categories'=>$categories,
             'column'=>$orderby,
             'dir'=>$dir,
             //'request'=>$_SERVER['REQUEST_URI']
@@ -524,11 +549,6 @@ class AdminController extends Controller
             echo $e->getMessage();
             exit();
         }
-        
-    }
-    
-    private function makeHeaderLink($title, $column, $code, $dir)
-    {
         
     }
     

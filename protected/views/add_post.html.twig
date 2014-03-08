@@ -17,9 +17,13 @@
         
             <select name="categories">
                 <option value="">Выберите категорию</option>
+                {% macro categories(curCategory, categories, count) %}
                 {% for category in categories %}
-                    <option value="{{ category.name }}" {% if curCategory == category.name %} selected="selected" {% endif %}>{{ category.name ~ '(' ~ category.num_posts ~ ')' }}</option>
+                <option value="{{ category.name }}" {% if curCategory == category.name %} selected="selected" {% endif %}>{{ category.name ~ ( count|default(false) ? '(' ~ category.num_posts ~ ')' : "") }}</option>
                 {% endfor %}
+                {% endmacro %}
+                {% import _self as add_form %}
+                    {{ add_form.categories(curCategory, categories, 1) }}
             </select>
         {% endif %}
         <input type="text" name="new_category" size="68"><br>

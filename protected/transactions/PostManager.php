@@ -64,7 +64,12 @@ class PostManager extends Transaction {
     
     private static $getSelectivelyShallow = "SELECT p.id, p.title, p.category, p.create_time, p.edit_time, p.status, lookup.name, lookup.position
             FROM posts  p JOIN lookup ON p.status = lookup.code
-            WHERE lookup.type = 'Post type' AND p.status=:status
+            WHERE lookup.type = 'Post type' AND p.%s=:%s
+            ORDER BY";
+    
+    private static $getByTwoParameters = "SELECT p.id, p.title, p.category, p.create_time, p.edit_time, p.status, lookup.name, lookup.position
+            FROM posts  p JOIN lookup ON p.status = lookup.code
+            WHERE lookup.type = 'Post type' AND p.status=:status AND p.category =:category 
             ORDER BY";
    
     private static $addPost = 'INSERT INTO posts
@@ -175,7 +180,7 @@ ON pt.tag_id=t.id WHERE t.name = :tag AND p.status= :status) GROUP BY p.id ORDER
     
     private static $countTotal = "SELECT COUNT(*) as total FROM posts";
     
-    private static $countOnly ="SELECT COUNT(*) as total FROM posts WHERE status = :status";
+    //private static $countOnly ="SELECT COUNT(*) as total FROM posts WHERE status = :status";
     
     private static $checkTags = "SELECT COUNT(*) as num FROM post_tag WHERE post_id = :id";
     
@@ -445,23 +450,45 @@ ON pt.tag_id=t.id WHERE t.name = :tag AND p.status= :status) GROUP BY p.id ORDER
         }
     }
     
-    public function countTotal($status=null)
+    public function countTotal($status=null, $category=null)
     {
-        if ( ! $status ) {
-            return $this->doStatement(self::$countTotal)->fetchColumn();
+        if ( (! $status) && (! $category) ) {
+            $sth= $this->doStatement(self::$countTotal);
+            
+        } elseif ( ( ! $status ) || ( ! $category) ) {
+            $where =  " WHERE %s=:%s";
+            $clause = ($category)? 'category' : 'status';
+            $query = self::$countTotal . $where;
+            $query = sprintf($query, $clause, $clause);
+            if ($status) {
+                $sth = $this->doStatement($query, array('status'=>$status));
+            } else {
+                $sth = $this->doStatement($query, array('category'=>$category));
+            }
         } else {
-            return $this->doStatement(self::$countOnly, array('status'=>$status))
-                ->fetchColumn();
+            $where = ' WHERE %1$s=:%1$s AND %2$s=:%2$s';
+            $query = self::$countTotal . $where;
+            $query = sprintf($query, 'status', 'category');
+            $sth = $this->doStatement($query, array(
+               'status'=>$status,
+                'category'=>$category,
+            ));
         }
+        if (!$sth) {
+            throw new Exception("Не удалось посчитать количество постов");
+        }
+        return $sth->fetchColumn();
     }
     
-    public function getPartial($offset, $limit, $status=null, $orderby=null, $mode=null)
+    public function getPartial($offset, $limit, $status=null, $category=null, $orderby=null, $mode=null)
     {
         $fields = array('title', 'status', 'create_time', 'edit_time', 'category');
         if ( ! in_array($orderby, $fields) ) {
             $orderby = " p.create_time";
+            //$orderby = " create_time";
         } else {
             $orderby =" p." . $orderby;
+            //$orderby = " " . $orderby;
         }
         //var_dump($orderby);
         
@@ -474,17 +501,31 @@ ON pt.tag_id=t.id WHERE t.name = :tag AND p.status= :status) GROUP BY p.id ORDER
             }
         
         $limitClause = " LIMIT {$offset}, {$limit}";
-        if ( ! $status ) {
+        if ( (! $status) && (! $category ) ) {
             $stmt=self::$getShallow . $orderby . $dir . $limitClause;
            
             $sth = $this->doStatement($stmt); 
-        } else {
+        } elseif ( (!$status) || (!$category) ) {
             $stmt=self::$getSelectivelyShallow . $orderby . $dir . $limitClause;
-            $sth=$this->doStatement($stmt, array(
+            $clause = ($status) ? "status" : "category" ;
+            $query = sprintf($stmt, $clause, $clause);
+            if ($status) {
+                $sth=$this->doStatement($query, array(
                 "status"=>$status));
+            } else {
+                $sth=$this->doStatement($query, array(
+                "category"=>$category));
+            }    
+        } else {
+            $stmt = self::$getByTwoParameters . $orderby . $dir . $limitClause;
+            $sth = $this->doStatement($stmt, array(
+                'status'=>$status,
+                'category'=>$category,
+            ));
         }
+
         $posts=$sth->fetchAll(PDO::FETCH_ASSOC);
-        if (!$posts) {
+        if ($posts === false) {
             throw new Exception("fdsafsadfsa");
         }
         return $posts;

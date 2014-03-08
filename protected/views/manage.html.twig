@@ -45,9 +45,10 @@
         td+td {
             text-align: center;
         }
-        
-
-
+        label {
+        width: 80px;
+        display: inline-block;
+        }
     </style>
    {{ parent() }}
 {% endblock %}
@@ -72,25 +73,33 @@
             {% endmacro %}
             {% import _self as manage %}
             {{ manage.statuses(status) }}
-        </select>
+            </select><br>
+            <label for="category">Категория</label>
+            <select name="category">
+                <option value="">Все</option>
+             {% import 'add_post.html.twig' as add_form %}
+                {{ add_form.categories(category, categories) }}
+            </select><br>
             <input type="submit" method="GET" action="/admin/manage" value="применить фильтр">
 </form>
+{% if posts is not empty %}
 <table>
     <tr>
         <th>
-            <a href="{% macro order(status, name, column, dir) %}{{ "/admin/manage?" ~ (status ? "status=" ~ status ~ "&c=" ~ name : "c=" ~ name) }}{{ "&d=" }}{% if column == name  %}{{ (dir == 1)? "0" : "1" }}{% else %}{{ (dir == 1)? 1 : 0 }}{% endif %}{% endmacro %}{% import _self as manage %}{{ manage.order(status, 'title', column, dir) }}">Заголовок</a>
+            <a href="{% macro order(status, category, name, column, dir) %}{{ "/admin/manage?status=" ~ status|default("") ~ "&category=" ~ category|default("") ~ "&c=" ~ name ~ "&d=" }}{% if column == name  %}{{ (dir == 1)? "0" : "1" }}{% else %}{{ (dir == 1)? 1 : 0 }}{% endif %}{% endmacro %}{% import _self as manage %}{{ manage.order(status, category, 'title', column, dir) }}">Заголовок</a>
+            
         </th>
         <th>
-            <a href="{{ manage.order(status, "category", column, dir) }}">Категория</a>
+            <a href="{{ manage.order(status, category, "category", column, dir) }}">Категория</a>
         </th>
         <th>
-            <a href="{{ manage.order(status, "create_time", column, dir) }}">Время создания</a>
+            <a href="{{ manage.order(status, category, "create_time", column, dir) }}">Время создания</a>
         </th>
         <th>
-            <a href="{{ manage.order(status, "edit_time", column, dir) }}">Редактировался</a>
+            <a href="{{ manage.order(status, category, "edit_time", column, dir) }}">Редактировался</a>
         </th>
         <th>
-            <a href="{{ manage.order(status, "status", column, dir) }}">Статус</a>
+            <a href="{{ manage.order(status, category, "status", column, dir) }}">Статус</a>
         </th>
         <th>
             Действие
@@ -99,7 +108,7 @@
     {% for post in posts %}
     <tr>
         <td>
-            {% if post.title|length > 40 %}{{ post.title|slice(0, 40) ~ "..." }}{% else %}{{ post.title }}{% endif %}
+            {{ (post.title|length > 40)? post.title|slice(0, 40) ~ "..." : post.title }}
         </td>
         <td>
             {{ post.category }}
@@ -150,5 +159,9 @@
 {% import _self as manage %}
   {{ manage.pagination(page, limit, lastPage, curURL, query) }}
     </div>
+{% else %}
+    Не найдено ни одной записи, соответствующей заданным параметрам
+</div>
+{% endif %}
 {% endblock %}
 

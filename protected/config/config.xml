@@ -12,7 +12,7 @@
     </post>
     <pagination>
         <posts>
-            <limit>3</limit>
+            <limit>10</limit>
         </posts>
         <comments>
             <limit>25</limit>

@@ -12,9 +12,12 @@
                         border-collapse: collapse;
                         font-size: smaller;
                         cellpadding: 0.5;
+                        float: right;
+                        table-layout:fixed;
         }
         th {
             background: wheat;
+            
         }
         form {
             margin: 10px;
@@ -22,14 +25,35 @@
         
         tr:nth-child(2n+1) {
             background: wheat;
+        }/*
+        .center {
+            /*width: 800px;
+            margin: auto;
+        } */
+        th+th {
+            width: 40px;
         }
+        th:first-child {
+            width: 400px;
+        }
+        th:nth-child(2) {
+            width: 200px;
+        }
+        th:last-child {
+            width: 300px;
+        }
+        td+td {
+            text-align: center;
+        }
+        
+
 
     </style>
    {{ parent() }}
 {% endblock %}
 
 {% block content %}
-
+    <div class="center">
 <form action="/admin/manage" method="GET">
             <label for="status">Статус</label>
             <select name="status">
@@ -51,23 +75,22 @@
         </select>
             <input type="submit" method="GET" action="/admin/manage" value="применить фильтр">
 </form>
-    {%  set delim = (query is empty) ? "?" : "&"  %}
 <table>
     <tr>
         <th>
-            <a href="">Заголовок</a>
+            <a href="{% macro order(status, name, column, dir) %}{{ "/admin/manage?" ~ (status ? "status=" ~ status ~ "&c=" ~ name : "c=" ~ name) }}{{ "&d=" }}{% if column == name  %}{{ (dir == 1)? "0" : "1" }}{% else %}{{ (dir == 1)? 1 : 0 }}{% endif %}{% endmacro %}{% import _self as manage %}{{ manage.order(status, 'title', column, dir) }}">Заголовок</a>
         </th>
         <th>
-            <a href="">Категория</a>
+            <a href="{{ manage.order(status, "category", column, dir) }}">Категория</a>
         </th>
         <th>
-            <a href="">Время создания</a>
+            <a href="{{ manage.order(status, "create_time", column, dir) }}">Время создания</a>
         </th>
         <th>
-            <a href="">Редактировался</a>
+            <a href="{{ manage.order(status, "edit_time", column, dir) }}">Редактировался</a>
         </th>
         <th>
-            <a href="">Статус</a>
+            <a href="{{ manage.order(status, "status", column, dir) }}">Статус</a>
         </th>
         <th>
             Действие
@@ -76,16 +99,16 @@
     {% for post in posts %}
     <tr>
         <td>
-            {{ post.title }}
+            {% if post.title|length > 40 %}{{ post.title|slice(0, 40) ~ "..." }}{% else %}{{ post.title }}{% endif %}
         </td>
         <td>
             {{ post.category }}
         </td>
         <td>
-            {{ post.create_time|date('d/m/Y') }}
+            {{ post.create_time|date('d.m.Y') }}
         </td>
         <td>
-            {{ post.edit_time|date('d/m/Y') }}
+            {{ post.edit_time|date('d.m.Y') }}
         </td>
         <td>
             {{ post.name }}
@@ -126,6 +149,6 @@
 
 {% import _self as manage %}
   {{ manage.pagination(page, limit, lastPage, curURL, query) }}
-
+    </div>
 {% endblock %}
 

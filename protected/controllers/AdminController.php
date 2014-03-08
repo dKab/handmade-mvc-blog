@@ -286,8 +286,17 @@ class AdminController extends Controller
                 'max_range'=>$lastPage));
         }
         $offset = ($page-1) * $limit; 
-        $posts = $model->getPartial($offset, $limit, $status);
-        
+        $orderby = filter_input(INPUT_GET, 'c', FILTER_DEFAULT, FILTER_NULL_ON_FAILURE);
+        $dir = filter_input(INPUT_GET, 'd', FILTER_VALIDATE_INT, array(
+            'min_range'=>0,
+            'max_range'=>1));
+       // var_dump($dir);
+        //var_dump($orderby);
+        try {
+        $posts = $model->getPartial($offset, $limit, $status, $orderby, $dir);
+        } catch (Exception $e) {
+            echo $e->getMessage();
+        }
         //var_dump($offset);
         //var_dump($limit);
         //var_dump($posts);
@@ -300,7 +309,12 @@ class AdminController extends Controller
         //$route=$_SERVER['REQUEST_URI'];
         $route = AppHelper::instance()->getRequest()->getRoute(true);
         $query=$_SERVER['QUERY_STRING'];
+        //var_dump($query);
+        
+        //var_dump($_SERVER['REQUEST_URI']);
         var_dump($query);
+        var_dump($route);
+        
         if (! empty($query) ) {
             if ( mb_strpos($query, "page") !== false ) {
                 $query = mb_substr($query, 0, mb_strpos($query, "&"));
@@ -316,6 +330,9 @@ class AdminController extends Controller
             'posts'=>$posts,
             'query'=>$query,
             'status'=>$status,
+            'column'=>$orderby,
+            'dir'=>$dir,
+            //'request'=>$_SERVER['REQUEST_URI']
         ));
         
         /*
@@ -507,6 +524,11 @@ class AdminController extends Controller
             echo $e->getMessage();
             exit();
         }
+        
+    }
+    
+    private function makeHeaderLink($title, $column, $code, $dir)
+    {
         
     }
     

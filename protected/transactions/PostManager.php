@@ -58,14 +58,14 @@ class PostManager extends Transaction {
     private static $getShallow = "SELECT p.id, p.title, p.category, p.create_time, p.edit_time, p.status, lookup.name, lookup.position
             FROM posts  p JOIN lookup ON p.status = lookup.code
             WHERE lookup.type = 'Post type'
-            ORDER BY lookup.position asc, p.create_time desc";
+            ORDER BY";
     
     private static $categories = "SELECT * FROM categories";
     
     private static $getSelectivelyShallow = "SELECT p.id, p.title, p.category, p.create_time, p.edit_time, p.status, lookup.name, lookup.position
             FROM posts  p JOIN lookup ON p.status = lookup.code
             WHERE lookup.type = 'Post type' AND p.status=:status
-            ORDER BY lookup.position asc, p.create_time desc";
+            ORDER BY";
    
     private static $addPost = 'INSERT INTO posts
         (author, title, begining, ending, create_time, edit_time, status, begining_html, ending_html, category)
@@ -279,14 +279,14 @@ ON pt.tag_id=t.id WHERE t.name = :tag AND p.status= :status) GROUP BY p.id ORDER
         $posts = $sth->fetchAll(PDO::FETCH_ASSOC);
         return $this->explodeTags($posts);
     }
-    
+    /*
     public function getShallow()
     {
         $sth = $this->doStatement(self::$getShallow);
         $posts = $sth->fetchAll(PDO::FETCH_ASSOC);
         return $posts;
     }
-    
+    */
     private function cutBody($body)
     {
         $cutTag = AppHelper::instance()->getCutTag();
@@ -455,17 +455,38 @@ ON pt.tag_id=t.id WHERE t.name = :tag AND p.status= :status) GROUP BY p.id ORDER
         }
     }
     
-    public function getPartial($offset, $limit, $status=null)
+    public function getPartial($offset, $limit, $status=null, $orderby=null, $mode=null)
     {
+        $fields = array('title', 'status', 'create_time', 'edit_time', 'category');
+        if ( ! in_array($orderby, $fields) ) {
+            $orderby = " p.create_time";
+        } else {
+            $orderby =" p." . $orderby;
+        }
+        //var_dump($orderby);
+        
+            switch ($mode) {
+                case 1:
+                    $dir = " DESC";
+                break;
+                default:
+                    $dir = " ASC";
+            }
+        
         $limitClause = " LIMIT {$offset}, {$limit}";
         if ( ! $status ) {
-            $stmt=self::$getShallow . $limitClause;
+            $stmt=self::$getShallow . $orderby . $dir . $limitClause;
+           
             $sth = $this->doStatement($stmt); 
         } else {
-            $stmt=self::$getSelectivelyShallow . $limitClause;
-            $sth=$this->doStatement($stmt, array("status"=>$status));
+            $stmt=self::$getSelectivelyShallow . $orderby . $dir . $limitClause;
+            $sth=$this->doStatement($stmt, array(
+                "status"=>$status));
         }
         $posts=$sth->fetchAll(PDO::FETCH_ASSOC);
+        if (!$posts) {
+            throw new Exception("fdsafsadfsa");
+        }
         return $posts;
     }
     

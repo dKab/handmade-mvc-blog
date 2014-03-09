@@ -2,9 +2,9 @@
 
 {% block javascript %}
     {{ parent() }}
- <script type="text/javascript" src="/javascript/add_edit.js"></script>
+<script type="text/javascript" src="/javascript/add_edit.js"></script>
 {% endblock %}
- 
+
 {% block content %}
 <form method="POST" action="/admin/store">
     {% import 'add_post.html.twig' as form %}

@@ -1,25 +1,39 @@
 {% extends "main.html.twig" %}
 
 {% block title title|title %}
-
+{% block styles %}
+    {{ parent() }}
+    <style type="text/css">
+        .comment_brief {
+            background: #EED8FC;
+            border: 1px solid #F0D0B6;
+            border-radius: 5px;
+            margin-top: 10px;
+            padding: 10px;
+        }
+        .name {
+            color: salmon;
+        }
+    </style>
+{% endblock %}
 {% block content %}
     {% for comment in comments %}
-        <div class="comment_brief">
-            <div class="comment_head">
-                <p class="time">Добавлен: {{ comment.time|date('d/m/y') }}</p>
-                к посту <a href="/admin/view?id={{ comment.post_id }}">
+<div class="comment_brief">
+    <div class="comment_head">
+        <p class="time">Добавлен: {{ comment.time|date('d/m/y') }}</p>
+        к посту <a href="/admin/view?id={{ comment.post_id }}">
                            {{ (comment.postTitle|length < 20) ? comment.postTitle : comment.postTitle|slice(0, 20) ~ '...' }}</a>
-                <p class="name">{{ comment.name }}</p>
-                <p class="body">{{ comment.body|nl2br }}</p>
-                <p class="status">Статус: {{ comment.fancyStatus }}</p>
-            </div>
-          <p class="options">
-              <a href="/admin/deleteComment?id={{ comment.id }}">Удалить</a>
+        <p class="name">{{ comment.name }}</p>
+        <p class="body">{{ comment.body|nl2br }}</p>
+        <p class="status">Статус: {{ comment.fancyStatus }}</p>
+    </div>
+    <p class="options">
+        <a href="/admin/deleteComment?id={{ comment.id }}">Удалить</a>
               {% if comment.status == constant('CommentManager::PENDING') %}
-                  | <a href="/admin/approve?id={{ comment.id }}">Утвердить</a>
+        | <a href="/admin/approve?id={{ comment.id }}">Утвердить</a>
               {% endif %}
-          </p>
-        </div>
+    </p>
+</div>
     {% endfor %}
 
     {% import 'manage.html.twig' as manage %}

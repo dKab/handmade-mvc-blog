@@ -2,56 +2,56 @@
 
 {% block javascript %}
     {{ parent() }}
- <script type="text/javascript" src="/javascript/add_edit.js"></script>
+<script type="text/javascript" src="/javascript/add_edit.js"></script>
 {% endblock %}
 
 {% block content %}
-    <form method="POST" action="/admin/store" enctype="multipart/form-data">
-        
+<form method="POST" action="/admin/store" enctype="multipart/form-data">
+
        {% macro post(categories, title, body, tags, status, curCategory) %}
         {% set curCategory = curCategory|default(null) %}
-        <label for="category">Категория:</label><br>
+    <label for="category">Категория:</label><br>
         {% if categories is not empty %}
-            <input type="radio" name="category_type" value="categories" checked>Выбрать из существующих категорий
-            <input type="radio" name="category_type" value="new_category">Создать новую категорию<br>
-        
-            <select name="categories">
-                <option value="">Выберите категорию</option>
+    <input type="radio" name="category_type" value="categories" checked>Выбрать из существующих категорий
+    <input type="radio" name="category_type" value="new_category">Создать новую категорию<br>
+
+    <select name="categories">
+        <option value="">Выберите категорию</option>
                 {% macro categories(curCategory, categories, count) %}
                 {% for category in categories %}
-                <option value="{{ category.name }}" {% if curCategory == category.name %} selected="selected" {% endif %}>{{ category.name ~ ( count|default(false) ? '(' ~ category.num_posts ~ ')' : "") }}</option>
+        <option value="{{ category.name }}" {% if curCategory == category.name %} selected="selected" {% endif %}>{{ category.name ~ ( count|default(false) ? '(' ~ category.num_posts ~ ')' : "") }}</option>
                 {% endfor %}
                 {% endmacro %}
                 {% import _self as add_form %}
                     {{ add_form.categories(curCategory, categories, 1) }}
-            </select>
+    </select>
         {% endif %}
-        <input type="text" name="new_category" size="68"><br>
-        <label for="title">Заголовок*:</label><br />
-        <input type="text" name="title" value="{{ title|default('') }}" size="68"></input><br />
-        <label for="body">Содержимое*:</label><br />
-        <textarea cols="59" rows="25" name="body">
+    <input type="text" name="new_category" size="68"><br>
+    <label for="title">Заголовок*:</label><br />
+    <input type="text" name="title" value="{{ title|default('') }}" size="68"></input><br />
+    <label for="body">Содержимое*:</label><br />
+    <textarea cols="59" rows="25" name="body">
         {% autoescape false %}
             {{ body|default('') }} 
         {% endautoescape %}
-        </textarea><br />
-        <label for="tags">Тэги через запятую</label><br />
-        <input type="text" name="tags" value="{{ tags|default('') }}" size="68"></input><br />
-        <label for="status">Пометить в группу:</label>
-        <select name="status">
+    </textarea><br />
+    <label for="tags">Тэги через запятую</label><br />
+    <input type="text" name="tags" value="{{ tags|default('') }}" size="68"></input><br />
+    <label for="status">Пометить в группу:</label>
+    <select name="status">
            {% import 'manage.html.twig' as input %}
             {{ input.statuses(status|default(null)) }}
-        </select><br>
+    </select><br>
         {% for i in (0..5) %}
             {% set name = "image[" ~ i ~ "]" %}
-            <label for="{{ name }}" style="margin-top: 10px; display: inline-block;">Изображение {{ i+1 }}</label>
-            <input type="file" name="{{ name }}" size="68"/><br>
+    <label for="{{ name }}" style="margin-top: 10px; display: inline-block;">Изображение {{ i+1 }}</label>
+    <input type="file" name="{{ name }}" size="68"/><br>
         {% endfor %}
-        <input type="submit" value="{{ (title is defined and title is not empty )? 'Сохранить изменения' : 'Отправить' }}"></input><br>
+    <input type="submit" value="{{ (title is defined and title is not empty )? 'Сохранить изменения' : 'Отправить' }}"></input><br>
        {% endmacro %}
-        
+
     {% import _self as form %}
         {{ form.post(categories) }}
-    </form>
-    
+</form>
+
 {% endblock %}

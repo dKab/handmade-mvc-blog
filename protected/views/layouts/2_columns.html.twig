@@ -1,29 +1,49 @@
 {% extends "main.html.twig" %}
 {% block styles %}
+<style type="text/css">
+
+</style>
  {{ parent() }}
 <link rel="stylesheet" href="/css/2-columns.css">
 {% endblock %}
 
 {% block sidebar %}
             {% if categories is not empty %}
-<p style="font-size: larger; background: wheat; margin-top: 0; padding: 5px;">  категории </p>
-            <ul>
+<p> категории </p>
+<ul>
                 {% for c in categories %}
-                <li>
-                    <a href="{{ "/" ~ controller ~ "/list?category=" ~ c.name }}">{{ c.name }}</a>
-                    <span class="num_posts">{{ c.num_posts }}</span>
-                </li>
+    <li>
+        <a href="{{ "/" ~ controller ~ "/list?category=" ~ c.name }}">{{ c.name }}</a>
+        <span class="num_posts">{{ c.num_posts }}</span>
+    </li>
                 {% endfor %}
-            </ul>
+</ul>
         {% endif %}
 
         {% if cloud is not empty %}
-          
-         <p style="font-size: larger; background: wheat; margin-top: 0; padding: 5px;"> облако тэгов </p>
-                  <div id="tag_cloud">
+
+<p> облако тэгов </p>
+<div id="tag_cloud">
           {% for name, weight in cloud %}
-         <a href="{{ "/" ~ controller ~ "/list?tag=" ~ name }}" style="font-size: {{ weight }}pt;"> {{ name }}</a>    
+    <a href="{{ "/" ~ controller ~ "/list?tag=" ~ name }}" style="font-size: {{ weight }}pt;"> {{ name }}</a>    
           {% endfor %}
-         </div>
+</div>
+         {% endif %}
+
+         {% if latest is not empty %}
+<p> Последние комментарии </p>
+<div id="comments">
+           {% for comment in latest %}
+<dl>
+    <dt>    
+    <span class="name">{{ comment.name }}</span>
+    на запись <a href="{{ "/" ~ controller ~ "/view?id=" ~ comment.post_id }}">{{ comment.title }}</a>
+    </dt>
+    <dd>
+             {{ ( comment.body|length > 50 ) ? comment.body|slice(0, 50) ~ "..." : comment.body }}
+    </dd>
+</dl>
+         {% endfor %}
+</div>
          {% endif %}
 {% endblock %}

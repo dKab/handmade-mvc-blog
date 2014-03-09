@@ -4,62 +4,62 @@
 
 {% block styles %}
    {{ parent() }}
-    <style type="text/css">
-        .comment {
-           padding-left: 5px;
-           background: antiquewhite;
-        }
-        #comment-form {
-            margin-bottom: 20px;
-        }
-        .comment.admin {
-            background: wheat;
-        }
-    </style>
+<style type="text/css">
+    .comment {
+        padding-left: 5px;
+        background: antiquewhite;
+    }
+    #comment-form {
+        margin-bottom: 20px;
+    }
+    .comment.admin {
+        background: wheat;
+    }
+</style>
 {% endblock %}
 {% block javascript %}
     {{ parent() }}
-    <script type="text/javascript">
-       $(function() {
-          $('a.reply_link').click(function() {
-              var toBeParent = $(this).closest('.comment').attr('id');
-              $('#comment-form')
-                      .find("input[name='parentId']")
-                      .val(toBeParent).end()
-                      .insertAfter($(this)
-                      .closest('.comment'));
-              return false;
-          });
-          $('#add_comment').click(function() {
-              var pos = $('#comment-form')
-                      .find("input[name='parentId']")
-                      .val(null)
-                      .end()
-                      .appendTo('#comments')
-                      .offset()
-                      .top;
-              $('html, body').scrollTop(pos);
-              return false;
-          });
-       });
-    </script> 
+<script type="text/javascript">
+    $(function() {
+        $('a.reply_link').click(function() {
+            var toBeParent = $(this).closest('.comment').attr('id');
+            $('#comment-form')
+                    .find("input[name='parentId']")
+                    .val(toBeParent).end()
+                    .insertAfter($(this)
+                            .closest('.comment'));
+            return false;
+        });
+        $('#add_comment').click(function() {
+            var pos = $('#comment-form')
+                    .find("input[name='parentId']")
+                    .val(null)
+                    .end()
+                    .appendTo('#comments')
+                    .offset()
+                    .top;
+            $('html, body').scrollTop(pos);
+            return false;
+        });
+    });
+</script> 
 {% endblock %}
-    
+
 {% block header %}
-    Категория: <a href="{{ "/" ~ controller ~ "/list?category=" ~ post.category }}">{{ post.category }}</a>
-    <p style="font-size: 2em;">{{ post.title }}</p> 
+Категория: <a href="{{ "/" ~ controller ~ "/list?category=" ~ post.category }}">{{ post.category }}</a> | Вернуться <a href="{{ "/" ~ controller ~ "/list" }}">на Главную</a>
+<p style="font-size: 2em;">{{ post.title }}</p> 
 {% endblock %}
-    
+
 {% block content %}
-                           Дата создания: 
+Дата создания: 
                             {{ post.create_time }} <br />
                            {% if post.create_time != post.edit_time %}
-                            Посдедний раз редактировался: 
+Посдедний раз редактировался: 
                              {{ post.edit_time }} <br />
                            {% endif %}
     {% if user is defined %}
-        Статус: {{ post.name }}
-        <br />
+Статус: {{ post.name }}
+<br />
     {% endif %}
     {% autoescape false %}
         {{ post.begining_html }}
@@ -68,54 +68,54 @@
 <br />
 {% if post.tags is not empty %}
 
-                    Тэги: {% for tag in post.tags %}
-                              <a href="{{ "/" ~ controller ~ "/list?tag=" ~ tag }}">{{ tag }}</a> 
+Тэги: {% for tag in post.tags %}
+<a href="{{ "/" ~ controller ~ "/list?tag=" ~ tag }}">{{ tag }}</a> 
                           {% endfor %}
 
 {% endif %}
 
- <hr>
- <section id='comments'>
+<hr>
+<section id='comments'>
      {% if comments is defined and comments is not empty %}
- <span> Комментарии ({{ comments|length }}) </span> | <a href="*" id="add_comment">Комментировать</a>
-          
+    <span> Комментарии ({{ comments|length }}) </span> | <a href="*" id="add_comment">Комментировать</a>
+
               {% for comment in comments %}
                  {% include 'comment.html.twig' %}
               {% endfor %}
 
      {% else %}
- <span> Комментариев пока нет </span> | <a href="*" id="add_comment">Комментировать</a><br><br>
+    <span> Комментариев пока нет </span> | <a href="*" id="add_comment">Комментировать</a><br><br>
      {% endif %}
 </section>       
      {% macro commentForm(header, postId, recaptcha, user, controller) %}
       {% set admin = user|default(null) %}
-          <form method='POST' action='{{ "/" ~ controller ~ "/comment" }}' id="comment-form">
+<form method='POST' action='{{ "/" ~ controller ~ "/comment" }}' id="comment-form">
               {{ header }} <br>
               {% if admin is empty %}
-                  <input type='text' name="name" style="margin-bottom: 10px;">
-                  <label for='name' >Имя *</label><br>
-                  <input type="text" name="email">
-                  <label for="email">Email *</label><br>
+    <input type='text' name="name" style="margin-bottom: 10px;">
+    <label for='name' >Имя *</label><br>
+    <input type="text" name="email">
+    <label for="email">Email *</label><br>
               {% endif %}
-              <input type="hidden" name="postId" value="{{ postId }}">
-              <input type="hidden" name="parentId" value="null">
-              <label for="body">Комментарий *</label><br>
-              <textarea cols="59" rows="10" name="body">
-              </textarea><br>
+    <input type="hidden" name="postId" value="{{ postId }}">
+    <input type="hidden" name="parentId" value="null">
+    <label for="body">Комментарий *</label><br>
+    <textarea cols="59" rows="10" name="body">
+    </textarea><br>
               {% if admin is empty %}
-                  <input type="checkbox" name="notify" checked="checked">
-                  <label for="notify">Уведомлять меня по почте об ответах на мой комментарий</label><br>
+    <input type="checkbox" name="notify" checked="checked">
+    <label for="notify">Уведомлять меня по почте об ответах на мой комментарий</label><br>
               {% endif %}
-                  
+
               {% autoescape false %}
                   {{ recaptcha }}
               {% endautoescape %}
-              <input type="submit" value="Отправить">
-          </form>
+    <input type="submit" value="Отправить">
+</form>
      {% endmacro %}
-     
+
      {% import _self as view %}
            {% set user = user|default(null) %}
            {{ view.commentForm('Добавить комментарий', post.id, recaptcha, user, controller) }}
-                              
+
 {% endblock %}

@@ -40,6 +40,9 @@ class AppHelper {
     public function commentsPerPage() {
         return $this->options->pagination->comments->limit;
     }
+    public function getDomainName() {
+        return $this->options->domain->name;
+    }
 
     public function getConnection() {
         if (!isset($this->connection)) {

@@ -24,6 +24,14 @@ class CommentManager extends Transaction {
     private static $selectLatest = "SELECT comments.name, comments.body, comments.post_id, posts.title
             FROM comments JOIN posts ON comments.post_id = posts.id WHERE comments.status = :status
             ORDER BY comments.time DESC";
+    
+    private static $getNotify = "SELECT notify_reply from comments WHERE id=:id";
+    private static $getContactInfo = "SELECT name, email FROM comments WHERE id=:id";
+    
+    private function isNotifyRequired($id) {
+        $required = $this->doStatement(self::$getNotify, array('id'=>$id))->fetchColumn();
+        return $required;
+    }
 
     private function getSiblingsNum($postId, $parentId = null) {
         if (!$parentId) {
@@ -70,6 +78,8 @@ class CommentManager extends Transaction {
                         'id' => $parentId
                     ))->fetchColumn();
             $path = $parentPath . "." . ($numSiblings + 1);
+            
+            $sendEmail = $this->isNotifyRequired($parentId);
         }
 
         $parts = explode(".", $path);
@@ -105,6 +115,18 @@ class CommentManager extends Transaction {
                 $this->doStatement(self::$addChildToPost, array('id' => $postId));
             } else {
                 $this->doStatement(self::$addChildToComment, array('id' => $parentId));
+            }
+            if (isset($sendEmail) && $sendEmail) {
+                $subject = "Уведомление";
+                $contacts = $this->doStatement(self::$getContactInfo, array('id'=>$parentId))->fetch(PDO::FETCH_ASSOC);
+                $body = wordwrap($body, 70);
+                $message = "Внимание Уважаемый {$contacts['name']}, на ваш комментарий ответили: \n '{$body}' \n "
+                . "Чтобы просмотреть все комментарии или добавить новый, перейдите по ссылке http://" . AppHelper::instance()->getDomainName()
+                . "/index/view?id={$postId} \n C уважением, " . AppHelper::instance()->getDomainName();
+                //$message = wordwrap($message, 70);
+                $headers = 'From: ' . AppHelper::instance()->getUserEmail('pusya') . "\r\n";
+                $to = $contacts['email'];
+                mail($to, $subject, $message, $headers);
             }
             $this->dbh->commit();
             return $id;

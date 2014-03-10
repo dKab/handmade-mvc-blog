@@ -42,7 +42,7 @@
     <dd>
              {{ ( comment.body|length > 50 ) ? comment.body|slice(0, 50) ~ "..." : comment.body }}
     </dd>
-</dl>
+</dl><hr>
          {% endfor %}
 </div>
          {% endif %}

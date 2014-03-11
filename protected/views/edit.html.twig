@@ -6,7 +6,7 @@
 {% endblock %}
 
 {% block content %}
-<form method="POST" action="/admin/store">
+<form method="POST" action="/admin/store" enctype="multipart/form-data">
     {% import 'add_post.html.twig' as form %}
     {# TODO need to pass cut tag somehow #}
     {% set body = post.begining ~ "#cut#" ~ post.ending %}

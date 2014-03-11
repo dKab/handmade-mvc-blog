@@ -374,7 +374,7 @@ FROM (SELECT p.*, pc.comments, lookup.name
                  */
                 $this->bindTags($postId, $tags);
 
-                $uploader = new ImageUploader();
+                $uploader = new ImageManager();
                 $imagesUploaded = $uploader->storeImages($postId);
             }
             $this->dbh->commit();
@@ -507,6 +507,8 @@ FROM (SELECT p.*, pc.comments, lookup.name
 
         $beginingHtml = $parsedown->parse(htmlspecialchars($body['begining'], ENT_NOQUOTES));
         $endingHtml = $parsedown->parse(htmlspecialchars($body['ending']), ENT_NOQUOTES);
+        //$beginingHtml = $parsedown->parse($body['begining']);
+        //$endingHtml = $parsedown->parse($body['ending']);
 
         $body['beginingHtml'] = $beginingHtml;
         $body['endingHtml'] = $endingHtml;
@@ -538,7 +540,7 @@ FROM (SELECT p.*, pc.comments, lookup.name
                 $this->bindTags($id, $tags);
             }
 
-            $uploader = new ImageUploader();
+            $uploader = new ImageManager();
             $imagesUploaded = $uploader->storeImages($id);
 
             $this->dbh->commit();
@@ -585,11 +587,15 @@ FROM (SELECT p.*, pc.comments, lookup.name
             $this->removeTags($id);
             $category = $this->getCategory($id);
             $this->decrementCategoryCounter($category);
+            
+            $imageHandler = new ImageManager();
+            $imageHandler->deleteAssociatedImages($id);
+            
             $success = $this->doStatement(self::$delete, array('id' => $id))
                     ->rowCount();
             if (!$success) {
                 throw new Exception("Не удалось удалить пост");
-            }
+            }            
             $this->dbh->commit();
             return $success;
         } catch (Exception $e) {

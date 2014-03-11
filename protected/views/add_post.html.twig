@@ -30,11 +30,7 @@
     <label for="title">Заголовок*:</label><br />
     <input type="text" name="title" value="{{ title|default('') }}" size="68"></input><br />
     <label for="body">Содержимое*:</label><br />
-    <textarea cols="59" rows="25" name="body">
-        {% autoescape false %}
-            {{ body|default('') }} 
-        {% endautoescape %}
-    </textarea><br />
+    <textarea cols="59" rows="25" name="body">{% autoescape false %}{{ body|default('') }}{% endautoescape %}</textarea><br />
     <label for="tags">Тэги через запятую</label><br />
     <input type="text" name="tags" value="{{ tags|default('') }}" size="68"></input><br />
     <label for="status">Пометить в группу:</label>

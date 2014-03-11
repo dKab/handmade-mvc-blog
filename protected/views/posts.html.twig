@@ -27,6 +27,7 @@
         <a href="{{ link }}" class="post_title">{{ post.title }}</a>
                 {% if user is defined and user is not empty %}
         <div class="post_status">Статус: {{ post.name }}</div>
+        <a href="{{ "/" ~ controller ~ "/edit?id=" ~ post.id }}">Редактировать</a> | <a href="{{ "/" ~ controller ~ "/delete?id=" ~ post.id }}">Удалить</a>
                 {% endif %}
         <span class="time">{{ post.create_time|date('d.m.Y') }}</span>
                  {% autoescape false %}

@@ -12,11 +12,12 @@
 #nav {
     display: none;
 }*/
-/*
+
 #content, #sidebar {
     box-sizing: border-box;
     -webkit-box-sizing: border-box;
-}*/
+    -moz-box-sizing: border-box;
+}
 #content {
     float: left;
     width: 740px !important;
@@ -24,8 +25,8 @@
 }
 #sidebar {
     margin-top: 20px;
-    width: 220px;
-    margin-left: 759px;
+    width: 200px;
+    margin-left: 760px;
     background: white;
     /*  border-left: 1px solid maroon; */
     /* height: 100%; */

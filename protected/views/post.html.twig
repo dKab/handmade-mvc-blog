@@ -58,7 +58,8 @@
                              {{ post.edit_time }} <br />
                            {% endif %}
     {% if user is defined %}
-Статус: {{ post.name }}
+                             Статус: {{ post.name }} <br>
+                             <a href="{{ "/" ~ controller ~ "/edit?id=" ~ post.id }}">Редактировать</a> | <a href="{{ "/" ~ controller ~ "/delete?id=" ~ post.id }}">Удалить</a>
 <br />
     {% endif %}
     {% autoescape false %}

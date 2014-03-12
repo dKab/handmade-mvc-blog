@@ -51,11 +51,9 @@ class CommentManager extends Transaction {
 
     public function getLatest($limit = 5) {
         $query = self::$selectLatest . " LIMIT {$limit}";
-        if (!$latest = $this->doStatement($query, array(
+        $latest = $this->doStatement($query, array(
                     'status' => self::APPROVED,
-                ))->fetchAll(PDO::FETCH_ASSOC)) {
-            throw new Exception("Не удалось получить последние комментарии");
-        }
+                ))->fetchAll(PDO::FETCH_ASSOC);
         return $latest;
     }
 

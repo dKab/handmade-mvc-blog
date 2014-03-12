@@ -1,12 +1,63 @@
 {% extends "main.html.twig" %}
 {% block styles %}
 <style type="text/css">
-
+#goTop{
+    background: cornsilk;
+    color: #F60;
+    width: 90px;
+    padding:5px;
+    position:fixed;
+    top:-100px;
+   /* right: 25px; */
+    text-align: center;
+    cursor: pointer;
+    border-radius: 0 5px 5px 0;
+    opacity: 0.8;
+}
+#center {
+    width: 10px;
+    margin: 0 auto;
+}
+#triangle {
+     	border: 10px solid transparent; 
+        border-bottom: 10px solid #800000; 
+        width: 0;
+        height:0;
+}
 </style>
  {{ parent() }}
 <link rel="stylesheet" href="/css/2-columns.css">
 {% endblock %}
-
+{% block javascript %}
+    {{ parent() }}
+    <script type="text/javascript">
+        $(function() {
+            left = $('#wrapper').offset().left + $('#wrapper').outerWidth();
+            $('#goTop').css('left', left);
+             $(window).scroll(function() {
+                 if($(this).scrollTop() > 100){
+                     $('#goTop').stop().animate({
+                         top: '120px'    
+                     }, 500);
+                 } else{
+                      $('#goTop').stop().animate({
+                          top: '-100px'    
+                      }, 500);
+                 }
+            });
+            
+             $('#goTop').click(function() {
+                 $('html, body').stop().animate({
+                    scrollTop: 0
+                 }, 500, function() {
+                     $('#goTop').stop().animate({
+                        top: '-100px'    
+                         }, 500);
+                     });
+             });
+        }); 
+    </script>
+{% endblock %}
 {% block sidebar %}
             {% if categories is not empty %}
 <p> категории </p>

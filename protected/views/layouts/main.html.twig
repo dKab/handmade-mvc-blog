@@ -28,19 +28,51 @@
             }
 
             #nav { 
-                background-color: wheat;
-                padding: 20px;
+                background-color:   indianred;
+                text-align: center;
+               /* padding: 20px; */
+                height: 50px;
+                border-bottom: 4px solid maroon;
+                font-weight: 600;  
+                position: fixed;
+                top: 0;
+                width: 100%;
+            }
+            #nav a {
+                color: wheat;
+                display: block;
+                height: 100%;
+                width: 100%;
+            }
+            #nav a:hover {
+                color: white;
+                text-decoration: none;
+            }
+            #nav ul {
+                float: left;
+                height: 100%;
             }
             #nav li {
-                display: inline;
+                float: left;
+                height: 100%;
+                min-height: 100%;
+                line-height: 50px;
+                padding: 0 10px;
+            }
+            #nav li:hover {
+                background:  firebrick;
+            }
+            #nav li.active {
+                background:  maroon;
             }
             #footer {
                 clear: both;
                 height:50px; 
-                background-color: black;
+                background: wheat;
                 text-align: center;
-                color: white;
+                color: black;
                 padding-top: 20px;
+                font-size: smaller;
 
             }
             ul {
@@ -76,6 +108,7 @@
                 float: right;
                 color: grey;
                 font-style: italic;
+                font-size: 0.8em;
             }
             #pagination {
                 margin: 10px;
@@ -107,6 +140,9 @@
             .yashare-auto-init {
                 float: right;
             }
+            #image {
+                height: 400px;
+            }
         </style>
         {% endblock %}
 
@@ -115,26 +151,24 @@
         {% endblock %}
     </head>
     <body>
-        {% if user is defined %}
+{% if user is defined %}
         <div id="nav">
             <ul style="list-style: none">
-                <li><a href="{{ "/" ~ controller }}">Главная</a></li> | 
-                    
-                <li><a href="/admin/add">Добавить запись</a></li> | 
-                <li><a href="/admin/manage">Управление записями</a></li> | 
-                <li><a href="/admin/approveComments">Утверждение комментариев ({{ pendingNum|default('0') }})</a></li> | 
-                <li><a href="/admin/logout">Выход</a></li>
+                <li {% if active is defined and active == "indexAction" %} class="active" {% endif %}><a href="{{ "/" ~ controller }}">главная</a></li>
+                <li {% if active is defined and active == "addAction" %} class="active" {% endif %}><a href="/admin/add">добавить запись</a></li>
+                <li  {% if active is defined and active == "manageAction" %} class="active" {% endif %}><a href="/admin/manage">управление записями</a></li>
+                <li {% if active is defined and active == "approveCommentsAction" %} class="active" {% endif %}><a href="/admin/approveComments">комментарии ({{ pendingNum|default('0') }})</a></li>
+                <li><a href="/admin/logout">выход</a></li>
             </ul>
         </div>
         {% endif %}
-        <div id="wrapper">
+        <div id="wrapper" {% if user is defined %} style="margin-top: 50px;" {% endif %}>
             {% block image %}
             {% endblock %}
             <div id="content">                
             {% block header  %}
-                <h5>{{ block('title') }} {% if total is defined %} ({{ total }}) |  <span id="home">Вернуться <a href="{{ "/" ~ controller ~ "/list" }}">на Главную</a></span> </h5> {% endif %}
+                <h3>{{ block('title') }} {% if total is defined %} ({{ total }}) |  <span id="home">Вернуться <a href="{{ "/" ~ controller ~ "/list" }}">на Главную</a></span> </h3> {% endif %}</h3>
             {% endblock %}
-
               {% if feedback is defined %}
                 {{ feedback }} <br />
                             {% endif %}

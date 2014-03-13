@@ -46,18 +46,15 @@ class PostManager extends Transaction {
      */
     private static $getShallow = "SELECT p.id, p.title, p.category, p.create_time, p.edit_time, p.status, lookup.name, lookup.position
             FROM posts  p JOIN lookup ON p.status = lookup.code
-            WHERE lookup.type = 'Post type'
-            ORDER BY";
+            WHERE lookup.type = 'Post type'";
     private static $categoriesPublished = "SELECT category as name, count(distinct id) as num_posts from posts WHERE status=:status group by category";
     private static $categories = "SELECT * FROM categories"; 
     private static $getSelectivelyShallow = "SELECT p.id, p.title, p.category, p.create_time, p.edit_time, p.status, lookup.name, lookup.position
             FROM posts  p JOIN lookup ON p.status = lookup.code
-            WHERE lookup.type = 'Post type' AND p.%s=:%s
-            ORDER BY";
+            WHERE lookup.type = 'Post type' AND p.%s=:%s";
     private static $getByTwoParameters = "SELECT p.id, p.title, p.category, p.create_time, p.edit_time, p.status, lookup.name, lookup.position
             FROM posts  p JOIN lookup ON p.status = lookup.code
-            WHERE lookup.type = 'Post type' AND p.status=:status AND p.category =:category 
-            ORDER BY";
+            WHERE lookup.type = 'Post type' AND p.status=:status AND p.category =:category";
     private static $addPost = 'INSERT INTO posts
         (author, title, begining, ending, create_time, edit_time, status, begining_html, ending_html, category)
         VALUES(:author, :title, :begining, :ending, NOW(), NOW(), :status, :beginingHtml, :endingHtml, :category)';
@@ -405,14 +402,24 @@ FROM (SELECT p.*, pc.comments, lookup.name
         }
     }
 
-    public function countTotal($status = null, $category = null) {
+    public function countTotal($status = null, $category = null, $string=null) {
+        
+        if ($string) {
+            $likeClause = "";
+            $likeClause .= ($status || $category) ? " AND " : " WHERE ";
+            $likeClause .= "title LIKE '%{$string}%'";
+        } else {
+            $likeClause="";
+        }
         if ((!$status) && (!$category)) {
-            $sth = $this->doStatement(self::$countTotal);
+            $query = self::$countTotal . $likeClause;
+            $sth = $this->doStatement($query);
         } elseif ((!$status ) || (!$category)) {
             $where = " WHERE %s=:%s";
             $clause = ($category) ? 'category' : 'status';
             $query = self::$countTotal . $where;
             $query = sprintf($query, $clause, $clause);
+            $query .= $likeClause;
             if ($status) {
                 $sth = $this->doStatement($query, array('status' => $status));
             } else {
@@ -422,6 +429,7 @@ FROM (SELECT p.*, pc.comments, lookup.name
             $where = ' WHERE %1$s=:%1$s AND %2$s=:%2$s';
             $query = self::$countTotal . $where;
             $query = sprintf($query, 'status', 'category');
+            $query .= $likeClause;
             $sth = $this->doStatement($query, array(
                 'status' => $status,
                 'category' => $category,
@@ -433,13 +441,13 @@ FROM (SELECT p.*, pc.comments, lookup.name
         return $sth->fetchColumn();
     }
 
-    public function getPartial($offset, $limit, $status = null, $category = null, $orderby = null, $mode = null) {
+    public function getPartial($offset, $limit, $like=null, $status = null, $category = null, $orderby = null, $mode = null) {
         $fields = array('title', 'status', 'create_time', 'edit_time', 'category');
         if (!in_array($orderby, $fields)) {
-            $orderby = " p.create_time";
+            $orderby = " ORDER BY p.create_time";
             //$orderby = " create_time";
         } else {
-            $orderby = " p." . $orderby;
+            $orderby = " ORDER BY p." . $orderby;
             //$orderby = " " . $orderby;
         }
         //var_dump($orderby);
@@ -451,25 +459,32 @@ FROM (SELECT p.*, pc.comments, lookup.name
             default:
                 $dir = " ASC";
         }
-
-        $limitClause = " LIMIT {$offset}, {$limit}";
+            $limitClause = " LIMIT {$offset}, {$limit}";
+            
+            //$escaped = addslashes($like);
+        if  ($like) {
+            $likeClause = " AND p.title LIKE '%{$like}%'";
+        } else {
+            $likeClause = "";
+        }
+        
         if ((!$status) && (!$category )) {
-            $stmt = self::$getShallow . $orderby . $dir . $limitClause;
+            $stmt = self::$getShallow . $likeClause . $orderby . $dir . $limitClause;
 
             $sth = $this->doStatement($stmt);
         } elseif ((!$status) || (!$category)) {
-            $stmt = self::$getSelectivelyShallow . $orderby . $dir . $limitClause;
             $clause = ($status) ? "status" : "category";
-            $query = sprintf($stmt, $clause, $clause);
+            $query =  sprintf(self::$getSelectivelyShallow, $clause, $clause);
+            $stmt = $query . $likeClause . $orderby . $dir . $limitClause;
             if ($status) {
-                $sth = $this->doStatement($query, array(
+                $sth = $this->doStatement($stmt, array(
                     "status" => $status));
             } else {
-                $sth = $this->doStatement($query, array(
+                $sth = $this->doStatement($stmt, array(
                     "category" => $category));
             }
         } else {
-            $stmt = self::$getByTwoParameters . $orderby . $dir . $limitClause;
+            $stmt = self::$getByTwoParameters . $likeClause . $orderby . $dir . $limitClause;
             $sth = $this->doStatement($stmt, array(
                 'status' => $status,
                 'category' => $category,

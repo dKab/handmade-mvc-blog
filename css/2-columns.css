@@ -19,6 +19,7 @@
     -moz-box-sizing: border-box;
 }
 #content {
+    padding-top: 20px;
     float: left;
     width: 740px !important;
     /*padding: 0 20px 0 0 !important;*/
@@ -92,3 +93,19 @@ h5 a:hover {
 #posts {
     display: inline-block;
 }*/
+#footer {
+    background-color: black !important;
+    color: cornsilk !important;
+}
+.tag {
+    display: inline-block;
+    border-radius: 3px;
+    background: khaki;
+    padding: 2px;
+    font-style: italic;
+    font-size: 0.8em;
+}
+.tag:hover {
+    text-decoration: none;
+    background:  palegoldenrod;
+}

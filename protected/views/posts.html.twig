@@ -9,20 +9,13 @@
     {% endif %}
 {% endblock %}
 {% block image  %}
-   {% if user is not defined %}
        <section id='image'>
        <img src="/css/9e4b33ceba28eabbc18e29e68b0c5373.jpg">
        </section>
-   {% endif %}
 {% endblock %}
 
 {% block content %}
-    <div id="goTop">
-        <div id="center">
-            <div id="triangle"></div> 
-        </div>
-        <a>Наверх</a>
-    </div>
+{% include 'goToTop_button.html.twig' %}
   {% if posts is not empty %}
 <ul id="posts">
     {% for post in posts %}
@@ -40,7 +33,7 @@
                  {% endautoescape %}
         <a href="{{ link }}">Читать дальше&rarr;</a><br><br>
         Тэги: {% for tag in post.tags %}
-        <a href="{{ "/" ~ controller ~ "/list?tag=" ~ tag }}">{{ tag }}</a> 
+        <a href="{{ "/" ~ controller ~ "/list?tag=" ~ tag }}" class="tag">{{ tag }}</a> 
                           {% endfor %}
         <span class="comments_count">  Комментариев: {{ post.comments|default(0) }} </span>
     </li>

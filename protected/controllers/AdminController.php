@@ -129,6 +129,7 @@ class AdminController extends Controller {
 
     public function doExecute($action = null) {
         if ($this->isAdmin()) {
+            $this->data['active']= $action;
             parent::doExecute($action);
         } else {
             header('Location: /site/login/');
@@ -264,16 +265,55 @@ class AdminController extends Controller {
 
     protected function manageAction() {
         $model = new PostManager();
+        /*
         $status = filter_input(INPUT_GET, 'status', FILTER_VALIDATE_INT, array(
             'min_range' => 1,
             'max_range' => 3,
         ));
         $category = filter_input(INPUT_GET, 'category', FILTER_DEFAULT, FILTER_NULL_ON_FAILURE);
         //var_dump($category);
-
+        
+       // $searchFormIsUsed = filter_input(INPUT_GET, 'title_search_query', FILTER_VALIDATE_INT);
+        $searchString = filter_input(INPUT_GET, 'title_search', FILTER_DEFAULT);
+              */
+                $args = array(
+                    'status'=>array(
+                        'filter'=>FILTER_VALIDATE_INT,
+                        'options'=>array(
+                                     'min_range' => 1,
+                                     'max_range' => 3,
+                        ),
+                        'flags'=>FILTER_NULL_ON_FAILURE),
+                     'category'=>array(
+                         'filter'=>FILTER_DEFAULT,
+                         'flags'=>FILTER_NULL_ON_FAILURE,),
+                    'title_search'=>array(
+                        'filter'=>FILTER_SANITIZE_MAGIC_QUOTES,
+                        'flags'=>FILTER_NULL_ON_FAILURE,
+                    ),);
+        $safeInput = filter_input_array(INPUT_GET, $args, true);
+        
+        if ( is_array($safeInput) ) {
+            extract($safeInput);
+        } else {
+            $status  = null;
+            $category = null;
+            $title_search = null;
+        }
+        if ( empty($title_search) ) {
+            $title_search= null;
+        }
+        $string = $title_search;
+        
+        /*
+        echo "<pre>";
+        var_dump($safeInput);
+        echo "</pre>";
+         * 
+         */
         $categories = $model->getCategories(PostManager::PUBLISHED);
         try {
-            $total = $model->countTotal($status, $category);
+            $total = $model->countTotal($status, $category, $string);
         } catch (Exception $e) {
             echo $e->getMessage();
         }
@@ -299,7 +339,7 @@ class AdminController extends Controller {
         // var_dump($dir);
         //var_dump($orderby);
         try {
-            $posts = $model->getPartial($offset, $limit, $status, $category, $orderby, $dir);
+            $posts = $model->getPartial($offset, $limit, $string, $status, $category, $orderby, $dir);
         } catch (Exception $e) {
             echo $e->getMessage();
         }
@@ -349,6 +389,8 @@ class AdminController extends Controller {
             'categories' => $categories,
             'column' => $orderby,
             'dir' => $dir,
+            'array'=>$safeInput,
+            'string'=>$string
                 //'request'=>$_SERVER['REQUEST_URI']
         ));
 

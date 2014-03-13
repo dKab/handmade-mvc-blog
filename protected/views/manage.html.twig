@@ -80,26 +80,35 @@
              {% import 'add_post.html.twig' as add_form %}
                 {{ add_form.categories(category, categories) }}
         </select><br>
-        <input type="submit" method="GET" action="/admin/manage" value="применить фильтр">
+                       <label for="title_search">Искать в заголовках</label>
+        <input type="text" name="title_search" value="{{ string|default('') }}">
+        <input type="submit" value="Поиск">
     </form>
+    <!--
+    <form type="/admin/manage" method="GET">
+                <label for="title_search">Искать в заголовках</label>
+        <input type="text" name="title_search">
+        <input type="hidden" name="title_search_query" value="1">
+        <input type="submit" value="Найти">
+    </form> -->
 {% if posts is not empty %}
     <table>
         <tr>
             <th>
-                <a href="{% macro order(status, category, name, column, dir) %}{{ "/admin/manage?status=" ~ status|default("") ~ "&category=" ~ category|default("") ~ "&c=" ~ name ~ "&d=" }}{% if column == name  %}{{ (dir == 1)? "0" : "1" }}{% else %}{{ (dir == 1)? 1 : 0 }}{% endif %}{% endmacro %}{% import _self as manage %}{{ manage.order(status, category, 'title', column, dir) }}">Заголовок</a>
+                <a href="{% macro order(status, category, name, string, column, dir) %}{{ "/admin/manage?status=" ~ status|default("") ~ (string ? "&title_search=" ~ string : "" ) ~ "&category=" ~ category|default("") ~ "&c=" ~ name ~ "&d=" }}{% if column == name  %}{{ (dir == 1)? "0" : "1" }}{% else %}{{ (dir == 1)? 1 : 0 }}{% endif %}{% endmacro %}{% import _self as manage %}{{ manage.order(status, category, 'title', string, column, dir) }}">Заголовок</a>
 
             </th>
             <th>
-                <a href="{{ manage.order(status, category, "category", column, dir) }}">Категория</a>
+                <a href="{{ manage.order(status, category, "category", string, column, dir) }}">Категория</a>
             </th>
             <th>
-                <a href="{{ manage.order(status, category, "create_time", column, dir) }}">Время создания</a>
+                <a href="{{ manage.order(status, category, "create_time", string, column, dir) }}">Время создания</a>
             </th>
             <th>
-                <a href="{{ manage.order(status, category, "edit_time", column, dir) }}">Редактировался</a>
+                <a href="{{ manage.order(status, category, "edit_time", string, column, dir) }}">Редактировался</a>
             </th>
             <th>
-                <a href="{{ manage.order(status, category, "status", column, dir) }}">Статус</a>
+                <a href="{{ manage.order(status, category, "status", string, column, dir) }}">Статус</a>
             </th>
             <th>
                 Действие

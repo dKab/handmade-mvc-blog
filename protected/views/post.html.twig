@@ -44,15 +44,18 @@
     });
 </script> 
 {% endblock %}
-
+{% block image %}
+       <section id='image'>
+       <img src="/css/9e4b33ceba28eabbc18e29e68b0c5373.jpg">
+       </section>
+{% endblock %}
 {% block header %}
 Категория: <a href="{{ "/" ~ controller ~ "/list?category=" ~ post.category }}">{{ post.category }}</a> | Вернуться <a href="{{ "/" ~ controller ~ "/list" }}">на Главную</a>
 <p style="font-size: 2em;">{{ post.title }}</p> 
 {% endblock %}
-
 {% block content %}
-    <a id="goTop">Наверх</a>
-Дата создания: 
+    {% include 'goToTop_button.html.twig' %}
+Опубликовано: 
                             {{ post.create_time }} <br />
                            {% if post.create_time != post.edit_time %}
 Посдедний раз редактировался: 
@@ -71,7 +74,7 @@
 {% if post.tags is not empty %}
 
 Тэги: {% for tag in post.tags %}
-<a href="{{ "/" ~ controller ~ "/list?tag=" ~ tag }}">{{ tag }}</a> 
+<a href="{{ "/" ~ controller ~ "/list?tag=" ~ tag }}" class="tag">{{ tag }}</a> 
                           {% endfor %} <br>
 {% endif %}
 <script type="text/javascript" src="//yandex.st/share/share.js"

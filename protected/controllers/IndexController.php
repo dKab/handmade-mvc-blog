@@ -88,6 +88,16 @@ class IndexController extends Controller {
         if (isset($title)) {
             $data['title'] = $title;
         }
+        $data = array_merge($data, array(
+            'query'=>$query,
+            'lastPage'=>$lastPage,
+            'limit'=>$limit,
+            'page'=>$page,
+            'curURL'=>$route,
+            'total'=>$total,
+            'latest'=>$latest
+        ));
+        /*
         $data['query'] = $query;
         $data['lastPage'] = $lastPage;
         $data['limit'] = $limit;
@@ -95,7 +105,7 @@ class IndexController extends Controller {
         $data['curURL'] = $route;
         $data['total'] = $total;
         $data['latest'] = $latest;
-
+        */
         $cloud = $model->getTagCloud();
         // var_dump($cloud);
         //exit();

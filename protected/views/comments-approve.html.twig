@@ -17,6 +17,7 @@
     </style>
 {% endblock %}
 {% block content %}
+   {% if comments is not empty %}
     {% for comment in comments %}
 <div class="comment_brief">
     <div class="comment_head">
@@ -35,8 +36,9 @@
     </p>
 </div>
     {% endfor %}
-
     {% import 'manage.html.twig' as manage %}
       {{ manage.pagination(page, limit, lastPage, curURL, query) }}
-
+  {% else %}
+    Комментариев пока нет
+  {% endif %}
 {% endblock %}

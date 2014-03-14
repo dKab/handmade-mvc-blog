@@ -8,7 +8,7 @@
 {% block content %}
 <form method="POST" action="/admin/store" enctype="multipart/form-data">
 
-       {% macro post(categories, title, body, tags, status, curCategory) %}
+       {% macro post(categories, title, body, tags, status, curCategory, video) %}
         {% set curCategory = curCategory|default(null) %}
     <label for="category">Категория:</label><br>
         {% if categories is not empty %}
@@ -29,6 +29,8 @@
     <input type="text" name="new_category" size="68"><br>
     <label for="title">Заголовок*:</label><br />
     <input type="text" name="title" value="{{ title|default('') }}" size="68"></input><br />
+    <label for="video">Прикрепить youtube видео:</label><br>
+    <input type="text" name="video" value="{{ video|default('') }}" size="68"></input><br>
     <label for="body">Содержимое*:</label><br />
     <textarea cols="59" rows="25" name="body">{% autoescape false %}{{ body|default('') }}{% endautoescape %}</textarea><br />
     <label for="tags">Тэги через запятую</label><br />

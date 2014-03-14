@@ -22,7 +22,6 @@ class AdminController extends Controller {
         $model = new PostManager();
         $route = AppHelper::instance()->getRequest()->getRoute(true);
         $query = $_SERVER['QUERY_STRING'];
-
         if (!empty($query)) {
             if (mb_strpos($query, "page") !== false) {
                 $query = mb_substr($query, 0, mb_strpos($query, "&"));
@@ -218,9 +217,12 @@ class AdminController extends Controller {
             'id' => array(
                 'filter' => FILTER_VALIDATE_INT,
                 'options' => array('min_range' => 1)
-        )));
+        ),
+         'video'=>array(
+             'filter'=>FILTER_DEFAULT
+         )       ));
 
-        $fields = array('title', 'body', 'status', 'tags');
+        $fields = array('title', 'body', 'status', 'tags', 'video');
         $post = array();
         array_walk($_POST, function($val, $key) use (&$post, $fields) {
             if (in_array($key, $fields)) {

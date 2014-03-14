@@ -154,7 +154,7 @@
 {% if user is defined %}
         <div id="nav">
             <ul style="list-style: none">
-                <li {% if active is defined and active == "indexAction" %} class="active" {% endif %}><a href="{{ "/" ~ controller }}">главная</a></li>
+                <li {% if active is defined and active == "indexAction" %} class="active" {% endif %}><a href="{{ "/" ~ controller ~ "/list" }}">главная</a></li>
                 <li {% if active is defined and active == "addAction" %} class="active" {% endif %}><a href="/admin/add">добавить запись</a></li>
                 <li  {% if active is defined and active == "manageAction" %} class="active" {% endif %}><a href="/admin/manage">управление записями</a></li>
                 <li {% if active is defined and active == "approveCommentsAction" %} class="active" {% endif %}><a href="/admin/approveComments">комментарии ({{ pendingNum|default('0') }})</a></li>

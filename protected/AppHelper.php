@@ -64,6 +64,9 @@ class AppHelper {
     public function getCutTag() {
         return $this->options->post->cut;
     }
+    public function getVideoTag() {
+        return $this->options->post->videoPlaceHolder;
+    }
 
     public function getDefaultCategory() {
         return $this->options->post->defaultCategory;

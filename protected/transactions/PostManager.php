@@ -56,15 +56,15 @@ class PostManager extends Transaction {
             FROM posts  p JOIN lookup ON p.status = lookup.code
             WHERE lookup.type = 'Post type' AND p.status=:status AND p.category =:category";
     private static $addPost = 'INSERT INTO posts
-        (author, title, begining, ending, create_time, edit_time, status, begining_html, ending_html, category)
-        VALUES(:author, :title, :begining, :ending, NOW(), NOW(), :status, :beginingHtml, :endingHtml, :category)';
+        (author, title, begining, ending, create_time, edit_time, status, begining_html, ending_html, category, video)
+        VALUES(:author, :title, :begining, :ending, NOW(), NOW(), :status, :beginingHtml, :endingHtml, :category, :video)';
     private static $insertTag = "INSERT INTO tags (name, frequency) VALUES(:name, 1)";
     private static $findTag = "SELECT id FROM tags WHERE name = :name";
     private static $updateTag = "UPDATE tags SET frequency = frequency +1 WHERE id = :id";
     private static $update = "UPDATE posts SET
                        author = :author,
                        title = :title, begining = :begining, ending=:ending, edit_time = NOW(),
-                       status = :status, begining_html=:beginingHtml, ending_html=:endingHtml, category=:category WHERE id=:id";
+                       status = :status, begining_html=:beginingHtml, ending_html=:endingHtml, category=:category, video=:video WHERE id=:id";
     private static $delete = 'DELETE FROM posts WHERE id=:id';
     // private static $find = "SELECT * FROM posts WHERE id=:id";
 
@@ -134,7 +134,7 @@ FROM (SELECT p.*, pc.comments, lookup.name
       p.status = l.code WHERE l.type = 'Post type'
       AND p.id=:id";
      */
-    private static $getRaw = "SELECT p.id, p.title, p.begining, p.ending, p.status, p.category, 
+    private static $getRaw = "SELECT p.id, p.title, p.begining, p.ending, p.status, p.category, p.video, 
                                   l.name as name FROM posts p JOIN lookup l ON
                                   p.status = l.code WHERE l.type = 'Post type'  
                                   AND p.id=:id";
@@ -320,18 +320,28 @@ FROM (SELECT p.*, pc.comments, lookup.name
 
             $parsedown = new Parsedown();
             //var_dump($parsedown);
-
+            
+            
             $beginingHtml = $parsedown->parse($body['begining']);
             $endingHtml = $parsedown->parse($body['ending']);
-
-            $body['beginingHtml'] = $beginingHtml;
-            $body['endingHtml'] = $endingHtml;
-
+            if ( $video ) {
+                $videoTag = AppHelper::instance()->getVideoTag();
+                //$embed = "<embed width='420' height='345' src='{$video}' type='application/x-shockwave-flash'></embed>";
+                $iframe ="<iframe width='420' height='345' src='{$video}'></iframe>";
+                $body['beginingHtml'] = str_replace($videoTag, $iframe ,$beginingHtml, $count);
+                $body['endingHtml'] = ($count) ? $endingHtml : str_replace($videoTag, $iframe ,$endingHtml);
+            } else {
+                $body['beginingHtml'] = $beginingHtml;
+                $body['endingHtml'] = $endingHtml;
+            }
+            
             $data = array_merge(array(
                 'category' => $category,
                 'status' => $status,
                 'author' => $user,
-                'title' => $title,), $body);
+                'title' => $title,
+                'video' => $video
+                    ), $body);
             //try {
             //$this->dbh->beginTransaction();
             $sth = $this->doStatement(self::$addPost, $data);
@@ -370,10 +380,9 @@ FROM (SELECT p.*, pc.comments, lookup.name
                  * 
                  */
                 $this->bindTags($postId, $tags);
-
-                $uploader = new ImageManager();
-                $imagesUploaded = $uploader->storeImages($postId);
             }
+            $uploader = new ImageManager();
+            $imagesUploaded = $uploader->storeImages($postId);
             $this->dbh->commit();
             return $postId;
         } catch (Exception $e) {
@@ -395,8 +404,8 @@ FROM (SELECT p.*, pc.comments, lookup.name
             $tags = $sth->fetchAll(PDO::FETCH_COLUMN);
             if ($tags) {
                 $found['tags'] = $tags;
-                return $found;
             }
+            return $found;
         } else {
             throw new Exception("Нет такого поста");
         }
@@ -525,15 +534,27 @@ FROM (SELECT p.*, pc.comments, lookup.name
         //$beginingHtml = $parsedown->parse($body['begining']);
         //$endingHtml = $parsedown->parse($body['ending']);
 
+        if ( $video ) {
+                $videoTag = AppHelper::instance()->getVideoTag();
+                //$embed = "<embed width='420' height='345' src='{$video}' type='application/x-shockwave-flash'></embed>";
+                $iframe ="<iframe width='420' height='345' src='{$video}'></iframe>";
+                $body['beginingHtml'] = str_replace($videoTag, $iframe ,$beginingHtml, $count);
+                $body['endingHtml'] = ($count) ? $endingHtml : str_replace($videoTag, $iframe ,$endingHtml);
+        } else {
+                $body['beginingHtml'] = $beginingHtml;
+                $body['endingHtml'] = $endingHtml;
+        }
+        /*
         $body['beginingHtml'] = $beginingHtml;
         $body['endingHtml'] = $endingHtml;
-
+        */
         $data = array_merge(array(
             'title' => $title,
             'author' => $user,
             'status' => $status,
             'id' => $id,
             'category' => $category,
+            'video'=>$video
                 ), $body);
 
         $this->dbh->beginTransaction();

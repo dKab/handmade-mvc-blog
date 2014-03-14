@@ -11,6 +11,7 @@
     </db>
     <post>
         <cut>#cut#</cut>
+        <videoPlaceHolder>@video@</videoPlaceHolder>
         <defaultCategory>Разное</defaultCategory>
     </post>
     <pagination>

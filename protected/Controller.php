@@ -2,11 +2,7 @@
 
 abstract class Controller {
 
-    // protected $layout="main"; uncomment this line if don't use any template engine 
-
     protected $data = array();
-
-    //public function __construct() { }
 
     protected function doExecute($action = null) {
         if ($action) {
@@ -70,21 +66,17 @@ abstract class Controller {
 
     protected function viewAction() {
         $id = filter_input(INPUT_GET, "id", FILTER_VALIDATE_INT);
-        //var_dump($id);
-        //exit();
         $model = new PostManager();
         $post = $model->getPost($id);
         $commentHandler = new CommentManager;
         $comments = $commentHandler->getAllComments($id);
         if (!$post) {
             throw new NotFoundException("couldn't found requested post" . $id);
-            //echo "not found!";
         }
 
         require_once('recaptchalib.php');
         $publickey = "6LdBU-8SAAAAAMcosmNtVcdNq03HBNWaO5YmHByT";
         $recaptcha = recaptcha_get_html($publickey);
-        //echo recaptcha_get_html($publickey);
 
         $status = ($this instanceof AdminController) ? null : PostManager::PUBLISHED;
         $categories = $model->getCategories($status);
@@ -93,35 +85,12 @@ abstract class Controller {
         
         $commentHandler = new CommentManager();
         $latest = $commentHandler->getLatest();
-        // var_dump($cloud);
-        //exit();
-        //echo $parsedown->parse('Hello _Parsedown_!'); # prints: <p>Hello <em>Parsedown</em>!</p>
-        //exit();
         $this->render('post.html.twig', array(
             'post' => $post,
             'comments' => $comments,
             'categories' => $categories,
             'cloud' => $cloud,
             'latest'=>$latest,
-            //'beginingHtml'=>$beginingHtml,
-            //'endingHtml'=>$endingHtml,
             'recaptcha' => $recaptcha));
     }
-
-    /*
-     * don't need it if we use Twig
-      protected function render($view, array $data, $layout=null)
-      {
-      if (is_array($data)) {
-      extract($data);
-      }
-      if ($layout) {
-      $this->layout = $layout;
-      }
-      $content = $view;
-      $sep = DIRECTORY_SEPARATOR;
-      include "views{$sep}layouts{$sep}{$this->layout}.php";
-      }
-     * 
-     */
 }

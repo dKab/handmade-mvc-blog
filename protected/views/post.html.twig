@@ -56,22 +56,29 @@
 {% block content %}
     {% include 'goToTop_button.html.twig' %}
 <section id="posts">
-Опубликовано: 
-                            {{ post.create_time }} <br />
-                           {% if post.create_time != post.edit_time %}
-Посдедний раз редактировался: 
-                             {{ post.edit_time }} <br />
-                           {% endif %}
     {% if user is defined %}
-                             Статус: {{ post.name }} <br>
-                             <a href="{{ "/" ~ controller ~ "/edit?id=" ~ post.id }}">Редактировать</a> | <a href="{{ "/" ~ controller ~ "/delete?id=" ~ post.id }}">Удалить</a>
-<br />
+        Дата создания: {{ post.create_time }}<br>
+        {% if post.create_time < post.edit_time %} 
+            Посдедний раз редактировался: {{ post.edit_time }} <br>
+        {% endif %}
+            <div class="post_status">Статус: <span class="{{ (post.status == constant('PostManager::PUBLISHED') )? "status published" : "status" }}">{{ post.name }}</span></div>
+          <div class="actions">
+          <a href="{{ "/" ~ controller ~ "/edit?id=" ~ post.id }}">Редактировать</a> | <a href="{{ "/" ~ controller ~ "/delete?id=" ~ post.id }}">Удалить</a>
+          </div>
+    {% endif %}
+    {% if post.publish_time is not empty %}
+        Опубликовано: {{ post.publish_time }} <br>
+    {% endif %}
+    {% if user is not defined %}
+        {% if post.edit_time > post.publish_time %}
+            Последний раз редактировался: {{ post.edit_time }} <br>
+        {% endif %}
     {% endif %}
     {% autoescape false %}
         {{ post.begining_html }}
         {{ post.ending_html }}
     {% endautoescape %}
-<br />
+<br>
 {% if post.tags is not empty %}
 
 Тэги: {% for tag in post.tags %}

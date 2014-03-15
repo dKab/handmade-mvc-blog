@@ -21,8 +21,10 @@ class PostManager extends Transaction {
     private static $incrementCategory = "UPDATE categories SET num_posts=num_posts+1 WHERE name=:category";
     private static $decrementCategory = "UPDATE categories SET num_posts=num_posts-1 WHERE name=:category AND num_posts > 0";
     private static $getCategory = "SELECT category FROM posts WHERE id=:id";
+    
+    private static $getOldValues = "SELECT category, status, publish_time FROM posts WHERE id=:id";
     private static $deleteCategory = "DELETE FROM categories WHERE name=:category AND num_posts = 0";
-    private static $filterByCategoryAndStatus = "SELECT p.id, p.title, p.create_time, p.edit_time, p.status, p.begining_html, GROUP_CONCAT(DISTINCT t.name SEPARATOR ', ') as tags FROM
+    private static $filterByCategoryAndStatus = "SELECT p.id, p.title, p.create_time, p.edit_time, p.publish_time, p.status, p.begining_html, GROUP_CONCAT(DISTINCT t.name SEPARATOR ', ') as tags FROM
                               posts p JOIN post_tag p2t ON p.id=p2t.post_id JOIN tags t
                               ON p2t.tag_id=t.id WHERE p.id IN
                               (SELECT p.id FROM posts p JOIN post_tag pt
@@ -40,15 +42,19 @@ class PostManager extends Transaction {
     private static $getByTwoParameters = "SELECT p.id, p.title, p.category, p.create_time, p.edit_time, p.status, lookup.name, lookup.position
             FROM posts  p JOIN lookup ON p.status = lookup.code
             WHERE lookup.type = 'Post type' AND p.status=:status AND p.category =:category";
-    private static $addPost = 'INSERT INTO posts
+    private static $addDraft = 'INSERT INTO posts
         (author, title, begining, ending, create_time, edit_time, status, begining_html, ending_html, category, video)
         VALUES(:author, :title, :begining, :ending, NOW(), NOW(), :status, :beginingHtml, :endingHtml, :category, :video)';
+    private static $addPost = 'INSERT INTO posts
+        (author, title, begining, ending, create_time, edit_time, publish_time, status, begining_html, ending_html, category, video)
+        VALUES(:author, :title, :begining, :ending, NOW(), NOW(), NOW(), :status, :beginingHtml, :endingHtml, :category, :video)';
     private static $insertTag = "INSERT INTO tags (name, frequency) VALUES(:name, 1)";
     private static $findTag = "SELECT id FROM tags WHERE name = :name";
     private static $updateTag = "UPDATE tags SET frequency = frequency +1 WHERE id = :id";
+    private static $getStatus = "SELECT status FROM posts WHERE id=:id";
     private static $update = "UPDATE posts SET
                        author = :author,
-                       title = :title, begining = :begining, ending=:ending, edit_time = NOW(),
+                       title = :title, begining = :begining, ending=:ending, edit_time = NOW(), publish_time=%s,
                        status = :status, begining_html=:beginingHtml, ending_html=:endingHtml, category=:category, video=:video WHERE id=:id";
     private static $delete = 'DELETE FROM posts WHERE id=:id';
     private static $checkTagInPost = "SELECT * FROM post_tag WHERE post_id = :post AND tag_id = :tag";
@@ -68,7 +74,7 @@ class PostManager extends Transaction {
                                             ON p.id=pt.post_id JOIN tags t
                                             ON pt.tag_id = t.id WHERE p.status=:status
                                             GROUP BY p.id ORDER BY create_time desc";
-    private static $getAll = "SELECT p2l.id, p2l.title, p2l.create_time, p2l.edit_time, p2l.status, p2l.begining_html, p2l.name, GROUP_CONCAT(DISTINCT t.name SEPARATOR ', ') as tags, p2l.comments
+    private static $getAll = "SELECT p2l.id, p2l.title, p2l.create_time, p2l.edit_time, p2l.publish_time, p2l.status, p2l.begining_html, p2l.name, GROUP_CONCAT(DISTINCT t.name SEPARATOR ', ') as tags, p2l.comments
 FROM (SELECT p.*, pc.comments, lookup.name
       FROM posts p
       LEFT JOIN 
@@ -84,7 +90,7 @@ FROM (SELECT p.*, pc.comments, lookup.name
                                             ON p2l.id=pt.post_id JOIN tags t
                                             ON pt.tag_id = t.id
                                             GROUP BY p2l.id ORDER BY p2l.status, p2l.create_time desc";
-    private static $findPostsByTag = "SELECT p2l.id, p2l.title, p2l.create_time, p2l.edit_time, p2l.status, 
+    private static $findPostsByTag = "SELECT p2l.id, p2l.title, p2l.create_time, p2l.edit_time, p2l.publish_time, p2l.status, 
                                      p2l.begining_html, p2l.name, GROUP_CONCAT(DISTINCT t.name SEPARATOR ', ') as tags FROM
                                       (SELECT posts.*, lookup.name, lookup.position
                                             FROM posts JOIN lookup ON posts.status = lookup.code
@@ -99,7 +105,7 @@ FROM (SELECT p.*, pc.comments, lookup.name
                                   p.status = l.code WHERE l.type = 'Post type'  
                                   AND p.id=:id";
     private static $getPretty = "SELECT p.id, p.title, p.begining_html,
-                                 p.ending_html, p.status, p.child_comments, p.edit_time, p.create_time,
+                                 p.ending_html, p.status, p.child_comments, p.edit_time, p.create_time, p.publish_time,
                                  p.category, 
                                  l.name as name FROM posts p JOIN lookup l ON
                                   p.status = l.code WHERE l.type = 'Post type'  
@@ -107,7 +113,7 @@ FROM (SELECT p.*, pc.comments, lookup.name
     private static $getTags = "SELECT t.name FROM tags t
                                JOIN post_tag p2t ON t.id=p2t.tag_id
                                JOIN posts p ON p2t.post_id=p.id WHERE p.id=:id";
-    private static $getComments = "";
+   
     private static $countTotal = "SELECT COUNT(*) as total FROM posts";
     private static $checkTags = "SELECT COUNT(*) as num FROM post_tag WHERE post_id = :id";
     private static $unlinkTags = "DELETE FROM post_tag WHERE post_id=:id";
@@ -282,8 +288,11 @@ FROM (SELECT p.*, pc.comments, lookup.name
                     ), $body);
             //try {
             //$this->dbh->beginTransaction();
-            $sth = $this->doStatement(self::$addPost, $data);
-
+            if ($status == self::DRAFT) {
+                $sth = $this->doStatement(self::$addDraft, $data);
+            } else {
+                $sth = $this->doStatement(self::$addPost, $data);
+            }
             if (!$postId = $this->dbh->lastInsertId()) {
                 throw new Exception("Не удалось добавить пост");
             }
@@ -465,16 +474,38 @@ FROM (SELECT p.*, pc.comments, lookup.name
 
         $this->dbh->beginTransaction();
         try {
+            /*
             $curCategory = $this->getCategory($id);
             if (!$this->doesCategoryExist($category)) {
                 $this->createCategory($category);
-            }
+            }*/
+            $oldValues = $this->doStatement(self::$getOldValues, array('id'=>$id))->fetch(PDO::FETCH_ASSOC);
+            $curCategory = $oldValues['category'];
+            $curStatus = $oldValues['status'];
+            $curPublishTime = $oldValues['publish_time'];
+            /*
+            echo "<pre>";
+            var_dump($oldValues);
+            echo "</pre>";
+            exit();
+             * 
+             */
             if ($curCategory != $category) {
                 $this->decrementCategoryCounter($curCategory);
                 $this->incrementCategoryCounter($category);
             }
-
-            $sth = $this->doStatement(self::$update, $data);
+            
+            //$curStatus = $this->doStatement(self::$getStatus, array('id'=>$id))->fetchColumn();
+            
+            if ( $status == self::PUBLISHED ) {
+                $publishTime= ($curPublishTime) ? $curPublishTime : "NOW()";
+            } else {
+                $publishTime = ($curPublishTime) ? $curPublishTime : "NULL";
+            }
+            
+            $updStmt = sprintf(self::$update, $publishTime);
+            
+            $sth = $this->doStatement($updStmt, $data);
 
             $this->removeTags($id);
 

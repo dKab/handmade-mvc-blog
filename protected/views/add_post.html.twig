@@ -8,7 +8,7 @@
 {% block content %}
 <form method="POST" action="/admin/store" enctype="multipart/form-data">
 
-       {% macro post(categories, title, body, tags, status, curCategory, video) %}
+       {% macro post(categories, title, body, tags, status, curCategory, video, archive) %}
         {% set curCategory = curCategory|default(null) %}
     <label for="category">Категория:</label><br>
         {% if categories is not empty %}
@@ -38,7 +38,7 @@
     <label for="status">Пометить в группу:</label>
     <select name="status">
            {% import 'manage.html.twig' as input %}
-            {{ input.statuses(status|default(null)) }}
+            {{ input.statuses(status|default(null), archive|default(0)) }}
     </select><br>
         {% for i in (0..5) %}
             {% set name = "image[" ~ i ~ "]" %}

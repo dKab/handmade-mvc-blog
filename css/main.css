@@ -1,0 +1,177 @@
+img {
+    max-width: 100%;
+}
+html, body {
+    height:100%;
+    margin: 0;
+    padding: 0;
+    background:  black;
+}
+.post_title {
+    font-size: 1.5em;
+}
+
+#nav { 
+    background-color:   indianred;
+    text-align: center;
+    /* padding: 20px; */
+    height: 50px;
+    border-bottom: 4px solid maroon;
+    font-weight: 600;  
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 20;
+}
+#nav a {
+    color: wheat;
+    display: block;
+    height: 100%;
+    width: 100%;
+}
+#nav a:hover {
+    color: white;
+    text-decoration: none;
+}
+#nav ul {
+    float: left;
+    height: 100%;
+}
+#nav li {
+    float: left;
+    height: 100%;
+    min-height: 100%;
+    line-height: 50px;
+    padding: 0 10px;
+}
+#nav li:hover {
+    background:  firebrick;
+}
+#nav li.active {
+    background:  maroon;
+}
+#footer {
+    clear: both;
+    height:50px; 
+    background:  #CD5C5C;
+    text-align: center;
+    color: white;
+    padding-top: 20px;
+    font-size: smaller;
+    margin-top: 20px;
+    border-top: 2px solid #800000;
+}
+ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+a {
+    text-decoration: none;
+    color: maroon;
+}
+a:hover {
+    text-decoration: underline;
+}
+a:visited {
+    color: maroon;
+}
+body {
+    font-family: Century-gothic, sans-serif;
+}
+hr {
+    border: none;
+    height: 1px;
+    background: lightgray;
+}
+.time {
+    float: right;
+    font-size: smaller;
+    color: grey;
+    font-style: italic;
+}
+.comments_count {
+    float: right;
+    color: grey;
+    font-style: italic;
+    font-size: 0.8em;
+}
+#pagination {
+    margin: 10px;
+    float: right;
+}
+#pagination ul {
+    list-style: none;
+}
+#pagination li {
+    display: inline;
+}
+#content {
+    width: 980px;
+    margin: auto;
+    padding: 0 20px;
+    min-height: 100%;
+    overflow: hidden;
+}
+.page-buffer {
+    height: 50px;
+}
+#wrapper {
+    margin-bottom: -50px;
+    min-height: 100%;
+    background: cornsilk;
+    overflow: hidden;               
+}
+input, select {
+    margin: 5px;
+}
+.yashare-auto-init {
+    float: right;
+}
+#image {
+    height: 400px;
+}
+#feedback.error {
+    background:   lightsalmon;
+    border: 1px solid crimson;
+}
+#feedback {
+    background:  lightgreen;
+    border: 1px solid forestgreen;
+    border-radius: 5px;
+    border-radius: 5px;
+    padding: 10px;
+    font-size: smaller;
+    font-weight: bold;
+}
+.closeButton {
+        float: right;
+    text-align: center;
+    padding: 3px 7px;
+    background:  transparent;
+    border-radius: 10px;
+    color:  darkgreen;
+    cursor: pointer;
+}
+
+.error .closeButton {
+    background: transparent;
+    color: brown;
+}
+.status {
+    display: inline-block;
+    padding: 2px 4px;
+    border-radius: 3px;
+    background:    peachpuff;
+    font-size: 0.7em;
+    font-weight: 700;
+    color: red;
+}
+.status.published {
+    background:  #ccffcc;
+    color: green;
+}
+.actions {
+    font-size: 0.7em;
+    font-weight: 600;
+}

@@ -96,6 +96,7 @@ h5 a:hover {
 #footer {
     background-color: black !important;
     color: cornsilk !important;
+    border-top: 0px transparent;
 }
 .tag {
     display: inline-block;
@@ -109,11 +110,15 @@ h5 a:hover {
     text-decoration: none;
     background:  palegoldenrod;
 }
+#posts img {
+    vertical-align: bottom;
+}
 
 .image_cont {
     overflow: hidden;
     display: inline-block;
     position: relative;
+    max-width: 100%;
 }
 .image_pop_up {
     position: absolute;

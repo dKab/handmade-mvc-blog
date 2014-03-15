@@ -24,11 +24,16 @@
     <li>
         <hr>
         <a href="{{ link }}" class="post_title">{{ post.title }}</a>
-                {% if user is defined and user is not empty %}
-        <div class="post_status">Статус: {{ post.name }}</div>
-        <a href="{{ "/" ~ controller ~ "/edit?id=" ~ post.id }}">Редактировать</a> | <a href="{{ "/" ~ controller ~ "/delete?id=" ~ post.id }}">Удалить</a>
-                {% endif %}
-        <span class="time">{{ post.create_time|date('d.m.Y') }}</span>
+        {% if user is defined and user is not empty %}
+        <div class="post_status">Статус: <span class="{{ (post.status == constant('PostManager::PUBLISHED') )? "status published" : "status" }}">{{ post.name }}</span></div>
+            Дата создания: {{ post.create_time|date('d.m.Y') }}<br>
+            <div class="actions">
+            <a href="{{ "/" ~ controller ~ "/edit?id=" ~ post.id }}">Редактировать</a> | <a href="{{ "/" ~ controller ~ "/delete?id=" ~ post.id }}">Удалить</a>
+            </div>
+        {% endif %}
+        {% if post.publish_time is not empty %}    
+        <span class="time">Опубликовано: {{ post.create_time|date('d.m.Y') }}</span>
+        {% endif %}
                  {% autoescape false %}
                      {{ post.begining_html }}
                  {% endautoescape %}

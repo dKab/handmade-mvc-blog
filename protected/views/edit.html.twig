@@ -11,6 +11,7 @@
     {# TODO need to pass cut tag somehow #}
     {% set body = post.begining ~ "#cut#" ~ post.ending %}
     <input type="hidden" name="id" value="{{ post.id }}">
-    {{ form.post(categories, post.title, body, post.tags|join(', '), post.status, post.category, post.video) }}
+    {% set archiveRequired = 1 %}
+    {{ form.post(categories, post.title, body, post.tags|join(', '), post.status, post.category, post.video, archiveRequired) }}
 </form>
 {% endblock %}

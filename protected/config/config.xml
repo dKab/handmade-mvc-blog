@@ -16,14 +16,14 @@
     </post>
     <pagination>
         <posts>
-            <limit>10</limit>
+            <limit>15</limit>
         </posts>
         <comments>
             <limit>25</limit>
         </comments>
     </pagination>
     <comments>
-        <moderate>0</moderate>
+        <moderate>1</moderate>
     </comments>
     <user>
         <pusya>

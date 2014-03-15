@@ -42,6 +42,7 @@ class AdminController extends Controller {
             $total = $model->countPostsByCategory($category);
             // var_dump($posts);
         } else {
+            $title = "Все записи";
             $total = $model->countTotal();
         }
 
@@ -67,38 +68,12 @@ class AdminController extends Controller {
 
         $commentHandler = new CommentManager();
         $latest = $commentHandler->getLatest();
-
-
-        /*
-          $tag = filter_input(INPUT_GET, "tag", FILTER_SANITIZE_STRING);
-          $category = filter_input(INPUT_GET, 'category', FILTER_DEFAULT);
-          $model = new PostManager();
-          if ( $tag ) {
-          $posts = $model->hasTag($tag);
-          $title = "Записи с тэгом '{$tag}'";
-          } elseif ($category) {
-          $posts = $model->getByCategory($category);
-          $title="Записи в категории {$category}";
-          } else {
-          $posts = $model->getAllPosts();
-          $title = "Все записи";
-          }
-         */
-
         $categories = $model->getCategories();
 
         $data = array('posts' => $posts, 'categories' => $categories);
         if (isset($title)) {
             $data['title'] = $title;
         }
-        /*
-          $data['query']=$query;
-          $data['lastPage']=$lastPage;
-          $data['limit']=$limit;
-          $data['page']=$page;
-          $data['curURL']=$route;
-          $data['total']=$total;
-         */
         $data = array_merge($data, array(
             'query' => $query,
             'lastPage' => $lastPage,
@@ -128,7 +103,7 @@ class AdminController extends Controller {
 
     public function doExecute($action = null) {
         if ($this->isAdmin()) {
-            $this->data['active']= $action;
+            $this->data['active'] = $action;
             parent::doExecute($action);
         } else {
             header('Location: /site/login/');
@@ -160,15 +135,9 @@ class AdminController extends Controller {
     }
 
     protected function storeAction() {
-        /*
-          echo "<pre>";
-          print_r($_FILES);
-          print_r($_POST);
-          echo "</pre>";
-          exit();
-         */
-        if (!$this->isFilled(array('title', 'body', 'status'))) {
-            $_SESSION['feedback'] = "Поля, помеченные звёздочкой должны быть заполнены";
+        if (!$this->isFilled(array('title', 'body', 'status', 'tags'))) {
+            $message = "Поля, помеченные звёздочкой должны быть заполнены";
+            $this->setFeedback($message, true);
             if (filter_has_var(INPUT_POST, 'id')) {
                 $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
                 header("Location: /admin/edit?id={$id}");
@@ -217,10 +186,10 @@ class AdminController extends Controller {
             'id' => array(
                 'filter' => FILTER_VALIDATE_INT,
                 'options' => array('min_range' => 1)
-        ),
-         'video'=>array(
-             'filter'=>FILTER_DEFAULT
-         )       ));
+            ),
+            'video' => array(
+                'filter' => FILTER_DEFAULT
+        )));
 
         $fields = array('title', 'body', 'status', 'tags', 'video');
         $post = array();
@@ -235,28 +204,27 @@ class AdminController extends Controller {
         $input['user'] = $_SESSION['user'];
 
         $input['category'] = $category;
-        /*
-          echo "<pre>";
-          print_r($input);
-          echo "</pre>";
-          exit();
-         * 
-         */
         $model = new PostManager();
 
         if ($input['id']) {
-            $_SESSION['feedback'] = 'Изменения успешно сохранены!';
+            $message = 'Изменения успешно сохранены!';
+            $this->setFeedback($message);
             $success = $model->editPost($input);
             if (!$success) {
-                $_SESSION['feedback'] = $model->getError();
+                $message = $model->getError();
+                $error = true;
+                $this->setFeedback($message, $error);
                 header("Location: /admin/edit?id={$input['id']}");
                 exit();
             }
         } else {
             //var_dump($input);
             $success = $model->addPost($input);
+            $this->setFeedback("Запись успешно добавлена!");
             if (!$success) {
-                $_SESSION['feedback'] = $model->getError();
+                $message = $model->getError();
+                $error = true;
+                $this->setFeedback($message, $error);
                 header("Location: /admin/add/");
                 exit();
             }
@@ -267,52 +235,35 @@ class AdminController extends Controller {
 
     protected function manageAction() {
         $model = new PostManager();
-        /*
-        $status = filter_input(INPUT_GET, 'status', FILTER_VALIDATE_INT, array(
-            'min_range' => 1,
-            'max_range' => 3,
-        ));
-        $category = filter_input(INPUT_GET, 'category', FILTER_DEFAULT, FILTER_NULL_ON_FAILURE);
-        //var_dump($category);
-        
-       // $searchFormIsUsed = filter_input(INPUT_GET, 'title_search_query', FILTER_VALIDATE_INT);
-        $searchString = filter_input(INPUT_GET, 'title_search', FILTER_DEFAULT);
-              */
-                $args = array(
-                    'status'=>array(
-                        'filter'=>FILTER_VALIDATE_INT,
-                        'options'=>array(
-                                     'min_range' => 1,
-                                     'max_range' => 3,
-                        ),
-                        'flags'=>FILTER_NULL_ON_FAILURE),
-                     'category'=>array(
-                         'filter'=>FILTER_DEFAULT,
-                         'flags'=>FILTER_NULL_ON_FAILURE,),
-                    'title_search'=>array(
-                        'filter'=>FILTER_SANITIZE_MAGIC_QUOTES,
-                        'flags'=>FILTER_NULL_ON_FAILURE,
-                    ),);
+        $args = array(
+            'status' => array(
+                'filter' => FILTER_VALIDATE_INT,
+                'options' => array(
+                    'min_range' => 1,
+                    'max_range' => 3,
+                ),
+                'flags' => FILTER_NULL_ON_FAILURE),
+            'category' => array(
+                'filter' => FILTER_DEFAULT,
+                'flags' => FILTER_NULL_ON_FAILURE,),
+            'title_search' => array(
+                'filter' => FILTER_SANITIZE_MAGIC_QUOTES,
+                'flags' => FILTER_NULL_ON_FAILURE,
+            ),);
         $safeInput = filter_input_array(INPUT_GET, $args, true);
-        
-        if ( is_array($safeInput) ) {
+
+        if (is_array($safeInput)) {
             extract($safeInput);
         } else {
-            $status  = null;
+            $status = null;
             $category = null;
             $title_search = null;
         }
-        if ( empty($title_search) ) {
-            $title_search= null;
+        if (empty($title_search)) {
+            $title_search = null;
         }
         $string = $title_search;
-        
-        /*
-        echo "<pre>";
-        var_dump($safeInput);
-        echo "</pre>";
-         * 
-         */
+
         $categories = $model->getCategories(PostManager::PUBLISHED);
         try {
             $total = $model->countTotal($status, $category, $string);
@@ -330,53 +281,28 @@ class AdminController extends Controller {
                 'min_range' => 1,
                 'max_range' => $lastPage));
         }
-        //echo "page:";
-        //var_dump($page);
-
         $offset = ($page - 1) * $limit;
         $orderby = filter_input(INPUT_GET, 'c', FILTER_DEFAULT, FILTER_NULL_ON_FAILURE);
         $dir = filter_input(INPUT_GET, 'd', FILTER_VALIDATE_INT, array(
             'min_range' => 0,
             'max_range' => 1));
-        // var_dump($dir);
-        //var_dump($orderby);
         try {
             $posts = $model->getPartial($offset, $limit, $string, $status, $category, $orderby, $dir);
         } catch (Exception $e) {
             echo $e->getMessage();
         }
-        //var_dump($offset);
-        //var_dump($limit);
-        //var_dump($posts);
 
-        /*
-          echo "<pre>";
-          print_r($_SERVER);
-          echo "</pre>";
-         */
-        // $curURL = substr($_SERVER['REQUEST_URI'], 0, $)$_SERVER['REQUEST_URI'];
-        //$route=$_SERVER['REQUEST_URI'];
         $route = AppHelper::instance()->getRequest()->getRoute(true);
         $query = $_SERVER['QUERY_STRING'];
-        //var_dump($query);
-        //var_dump($_SERVER['REQUEST_URI']);
-        // var_dump(urldecode($query));
-        // var_dump($route);
 
         if (!empty($query)) {
             if (mb_strpos($query, "page") !== false) {
-                // $query = mb_substr($query, 0, mb_strpos($query, "&"));
                 $query = explode("&", $query);
                 $pageClause = array_pop($query);
                 $query = join("&", $query);
             }
         }
         $route .= "?" . $query;
-
-        //echo "query: \n";
-        //var_dump($query);
-        //echo "curURL: \n";
-        //var_dump($route);
 
         $this->render('manage.html.twig', array(
             'title' => 'Страница управления',
@@ -391,20 +317,9 @@ class AdminController extends Controller {
             'categories' => $categories,
             'column' => $orderby,
             'dir' => $dir,
-            'array'=>$safeInput,
-            'string'=>$string
-                //'request'=>$_SERVER['REQUEST_URI']
+            'array' => $safeInput,
+            'string' => $string
         ));
-
-        /*
-          $model = new PostManager();
-          $posts = $model->getShallow();
-          $this->render("manage.html.twig", array(
-          'posts'=>$posts,
-          'title'=>'Управление записями'
-          ));
-         * 
-         */
     }
 
     protected function editAction() {
@@ -431,9 +346,10 @@ class AdminController extends Controller {
         $model = new PostManager();
         $success = $model->removePost($id);
         if (!$success) {
-            $_SESSION['feedback'] = $model->getError();
+            $error = 1;
+            $this->setFeedback($model->getError(), $error);
         } else {
-            $_SESSION['feedback'] = "Пост успешно удалён!";
+            $this->setFeedback("Пост успешно удалён!");
         }
         header('Location: /admin/manage');
         exit();
@@ -481,7 +397,7 @@ class AdminController extends Controller {
     protected function approveAction() {
         $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT, array('options' => 'FILTER_NULL_ON_FAILURE'));
         if (!$id) {
-            $_SESSION['feedback'] = "комментарий не найден";
+            $this->setFeedback("комментарий не найден", 1);
             header('Location: /admin/approveComments');
             exit();
         }
@@ -497,7 +413,7 @@ class AdminController extends Controller {
     protected function deleteCommentAction() {
         $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT, array('options' => 'FILTER_NULL_ON_FAILURE'));
         if (!$id) {
-            $_SESSION['feedback'] = "комментарий не найден";
+            $this->setFeedback("комментарий не найден", 1);
             header('Location: /admin/approveComments');
             exit();
         }
@@ -515,10 +431,10 @@ class AdminController extends Controller {
         $model = new PostManager();
         $success = $model->deleteCategory($category);
         if (!$success) {
-            $_SESSION['feedback'] = "Не удалось удалить категорию";
+            $this->setFeedback("Не удалось удалить категорию", 1);
             header("Location: /admin/list?category={$category}");
         }
-        $_SESSION['feedback'] = "Категория успешно удалена!";
+        $this->setFeedback("Категория успешно удалена!");
         header("Location: /admin/list");
     }
 
@@ -535,7 +451,7 @@ class AdminController extends Controller {
         ));
         //$id = filter_input(INPUT_POST, 'postId', FILTER_VALIDATE_INT);
         if (!$this->isFilled(array('body', 'postId'))) {
-            $_SESSION['feedback'] = "Поля со звёздочкой обязательны";
+            $this->setFeedback("Поля со звёздочкой обязательны", 1);
             header("Location: /admin/view?id={$input['postId']}");
             exit();
         }
@@ -544,7 +460,7 @@ class AdminController extends Controller {
         $resp = recaptcha_check_answer($privatekey, $_SERVER["REMOTE_ADDR"], $_POST["recaptcha_challenge_field"], $_POST["recaptcha_response_field"]);
 
         if (!$resp->is_valid) {
-            $_SESSION['feedback'] = "Вы неверно ввели каптчу. Попробуйте еще раз.";
+            $this->setFeedback("Вы неверно ввели каптчу. Попробуйте еще раз", 1);
             header("Location: /admin/view?id={$input['postId']}");
             exit();
         }
@@ -565,7 +481,7 @@ class AdminController extends Controller {
         try {
             $commentId = $model->addComment($comment);
             $message = 'Комментарий успешно добавлен!';
-            $_SESSION['feedback'] = $message;
+            $this->setFeedback($message);
             header("Location: /admin/view?id={$input['postId']}");
             exit();
         } catch (Exception $e) {

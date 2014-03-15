@@ -16,6 +16,7 @@
 
 {% block content %}
 {% include 'goToTop_button.html.twig' %}
+<section id="posts">
   {% if posts is not empty %}
 <ul id="posts">
     {% for post in posts %}
@@ -54,6 +55,7 @@
             {% endif %}
 </p>  
   {% endif %}
+</section>
 {% endblock content %}
 
 

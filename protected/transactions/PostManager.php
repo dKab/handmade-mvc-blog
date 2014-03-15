@@ -10,13 +10,6 @@ class PostManager extends Transaction {
     const PUBLISHED = 2;
     const ARCHIVE = 3;
 
-    /*
-      private static $findByStatus = "SELECT * FROM posts
-      WHERE status =
-      :status
-      ORDER BY create_time DESC";
-     */
-
     private static $countAllPostsWithTag = "SELECT frequency FROM tags WHERE name=:tag";
     private static $countPostsWithTagAndStatus = "SELECT count(*) FROM posts p join post_tag pt
                                  on p.id=pt.post_id join tags t on pt.tag_id=t.id 
@@ -36,19 +29,11 @@ class PostManager extends Transaction {
                               ON p.id=pt.post_id JOIN tags t
                               ON pt.tag_id=t.id WHERE %s = :%s AND p.status= :status)
                               GROUP BY p.id ORDER BY p.create_time desc";
-    /*
-      private static $countFilterByParameterAndStatus = "SELECT COUNT(*) FROM posts p JOIN post_tag p2t ON p.id=p2t.post_id JOIN tags t
-      ON p2t.tag_id=t.id WHERE p.id IN
-      (SELECT p.id FROM posts p JOIN post_tag pt
-      ON p.id=pt.post_id JOIN tags t
-      ON pt.tag_id=t.id WHERE %s = :%s AND p.status= :status)
-      GROUP BY p.id";
-     */
     private static $getShallow = "SELECT p.id, p.title, p.category, p.create_time, p.edit_time, p.status, lookup.name, lookup.position
             FROM posts  p JOIN lookup ON p.status = lookup.code
             WHERE lookup.type = 'Post type'";
     private static $categoriesPublished = "SELECT category as name, count(distinct id) as num_posts from posts WHERE status=:status group by category";
-    private static $categories = "SELECT * FROM categories"; 
+    private static $categories = "SELECT * FROM categories";
     private static $getSelectivelyShallow = "SELECT p.id, p.title, p.category, p.create_time, p.edit_time, p.status, lookup.name, lookup.position
             FROM posts  p JOIN lookup ON p.status = lookup.code
             WHERE lookup.type = 'Post type' AND p.%s=:%s";
@@ -66,8 +51,6 @@ class PostManager extends Transaction {
                        title = :title, begining = :begining, ending=:ending, edit_time = NOW(),
                        status = :status, begining_html=:beginingHtml, ending_html=:endingHtml, category=:category, video=:video WHERE id=:id";
     private static $delete = 'DELETE FROM posts WHERE id=:id';
-    // private static $find = "SELECT * FROM posts WHERE id=:id";
-
     private static $checkTagInPost = "SELECT * FROM post_tag WHERE post_id = :post AND tag_id = :tag";
     private static $linkTag = "INSERT INTO post_tag VALUES(:post, :tag)";
     private static $findByStatus = "SELECT p.id, p.title, p.create_time, p.edit_time, p.status, p.begining_html, GROUP_CONCAT(DISTINCT t.name SEPARATOR ', ') as tags, p.comments
@@ -101,15 +84,6 @@ FROM (SELECT p.*, pc.comments, lookup.name
                                             ON p2l.id=pt.post_id JOIN tags t
                                             ON pt.tag_id = t.id
                                             GROUP BY p2l.id ORDER BY p2l.status, p2l.create_time desc";
-    /*
-      private static $findPostsByTagAndStatus = "
-      SELECT p.id, p.title, p.create_time, p.edit_time, p.status, p.begining_html, GROUP_CONCAT(DISTINCT t.name SEPARATOR ', ') as tags FROM
-      posts p JOIN post_tag p2t ON p.id=p2t.post_id JOIN tags t
-      ON p2t.tag_id=t.id WHERE p.id IN
-      (SELECT p.id FROM posts p JOIN post_tag pt
-      ON p.id=pt.post_id JOIN tags t
-      ON pt.tag_id=t.id WHERE t.name = :tag AND p.status= :status) GROUP BY p.id ORDER BY p.create_time desc";
-     */
     private static $findPostsByTag = "SELECT p2l.id, p2l.title, p2l.create_time, p2l.edit_time, p2l.status, 
                                      p2l.begining_html, p2l.name, GROUP_CONCAT(DISTINCT t.name SEPARATOR ', ') as tags FROM
                                       (SELECT posts.*, lookup.name, lookup.position
@@ -120,20 +94,6 @@ FROM (SELECT p.*, pc.comments, lookup.name
                                       (SELECT p.id FROM posts p JOIN post_tag pt 
                                       ON p.id=pt.post_id JOIN tags t 
                                       ON pt.tag_id=t.id WHERE %s = :%s) GROUP BY p2l.id ORDER BY p2l.status asc, p2l.create_time desc";
-    /*
-      private static $countPostsByTag = "SELECT COUNT(*) FROM (SELECT posts.*, lookup.name, lookup.position
-      FROM posts JOIN lookup ON posts.status = lookup.code
-      WHERE lookup.type = 'Post type') as p2l
-      JOIN post_tag p2t ON p2l.id=p2t.post_id JOIN tags t
-      ON p2t.tag_id=t.id WHERE p2l.id IN
-      (SELECT p.id FROM posts p JOIN post_tag pt
-      ON p.id=pt.post_id JOIN tags t
-      ON pt.tag_id=t.id WHERE %s = :%s) GROUP BY p2l.id";
-     */
-    /* private static $findPost = "SELECT p.*, l.name as name FROM posts p JOIN lookup l ON
-      p.status = l.code WHERE l.type = 'Post type'
-      AND p.id=:id";
-     */
     private static $getRaw = "SELECT p.id, p.title, p.begining, p.ending, p.status, p.category, p.video, 
                                   l.name as name FROM posts p JOIN lookup l ON
                                   p.status = l.code WHERE l.type = 'Post type'  
@@ -149,8 +109,6 @@ FROM (SELECT p.*, pc.comments, lookup.name
                                JOIN posts p ON p2t.post_id=p.id WHERE p.id=:id";
     private static $getComments = "";
     private static $countTotal = "SELECT COUNT(*) as total FROM posts";
-    //private static $countOnly ="SELECT COUNT(*) as total FROM posts WHERE status = :status";
-
     private static $checkTags = "SELECT COUNT(*) as num FROM post_tag WHERE post_id = :id";
     private static $unlinkTags = "DELETE FROM post_tag WHERE post_id=:id";
     private static $deleteTag = "DELETE FROM tags WHERE id IN (SELECT tag_id FROM post_tag WHERE post_id = :id)
@@ -242,15 +200,6 @@ FROM (SELECT p.*, pc.comments, lookup.name
         return $this->explodeTags($posts);
     }
 
-    /*
-      public function getShallow()
-      {
-      $sth = $this->doStatement(self::$getShallow);
-      $posts = $sth->fetchAll(PDO::FETCH_ASSOC);
-      return $posts;
-      }
-     */
-
     private function cutBody($body) {
         $cutTag = AppHelper::instance()->getCutTag();
         if ($cut = mb_strpos($body, $cutTag)) {
@@ -295,17 +244,6 @@ FROM (SELECT p.*, pc.comments, lookup.name
 
     public function addPost($input) {
         extract($input);
-        /*
-          $cutTag = AppHelper::instance()->getCutTag();
-          if ( $cut = mb_strpos($body,$cutTag) ) {
-          list($begining, $ending) = explode($cutTag, $body);
-          } else {
-          $begining = $body;
-          $ending = "";
-          }
-         * 
-         */
-
         try {
             $this->dbh->beginTransaction();
 
@@ -320,21 +258,21 @@ FROM (SELECT p.*, pc.comments, lookup.name
 
             $parsedown = new Parsedown();
             //var_dump($parsedown);
-            
-            
+
+
             $beginingHtml = $parsedown->parse($body['begining']);
             $endingHtml = $parsedown->parse($body['ending']);
-            if ( $video ) {
+            if ($video) {
                 $videoTag = AppHelper::instance()->getVideoTag();
                 //$embed = "<embed width='420' height='345' src='{$video}' type='application/x-shockwave-flash'></embed>";
-                $iframe ="<iframe width='420' height='345' src='{$video}'></iframe>";
-                $body['beginingHtml'] = str_replace($videoTag, $iframe ,$beginingHtml, $count);
-                $body['endingHtml'] = ($count) ? $endingHtml : str_replace($videoTag, $iframe ,$endingHtml);
+                $iframe = "<iframe width='420' height='345' src='{$video}'></iframe>";
+                $body['beginingHtml'] = str_replace($videoTag, $iframe, $beginingHtml, $count);
+                $body['endingHtml'] = ($count) ? $endingHtml : str_replace($videoTag, $iframe, $endingHtml);
             } else {
                 $body['beginingHtml'] = $beginingHtml;
                 $body['endingHtml'] = $endingHtml;
             }
-            
+
             $data = array_merge(array(
                 'category' => $category,
                 'status' => $status,
@@ -350,35 +288,6 @@ FROM (SELECT p.*, pc.comments, lookup.name
                 throw new Exception("Не удалось добавить пост");
             }
             if (!empty($tags)) {
-                /*
-                  foreach ($tags as $name) {
-                  $sth=$this->doStatement(self::$findTag, array(
-                  'name'=>$name));
-                  if ( $id = $sth->fetchColumn() ) {
-                  $sth=$this->doStatement(self::$updateTag, array(
-                  'id'=>$id,
-                  ));
-                  if ( ! $count = $sth->rowCount() ) {
-                  throw new Exception("Не удалось обновить поле frequency тэга");
-                  }
-                  } else {
-                  $sth=$this->doStatement(self::$insertTag, array(
-                  'name'=>$name
-                  ));
-                  if ( ! $id = $this->dbh->lastInsertId() ) {
-                  throw new Exception("Не удалось добавить тэг");
-                  }
-                  }
-                  $sth=$this->doStatement(self::$linkTag, array(
-                  'post'=>$postId,
-                  'tag'=>$id,
-                  ));
-                  if ( ! $count = $sth->rowCount() ) {
-                  throw new Exception("Не удалось связать тэг с постом");
-                  }
-                  }
-                 * 
-                 */
                 $this->bindTags($postId, $tags);
             }
             $uploader = new ImageManager();
@@ -411,14 +320,14 @@ FROM (SELECT p.*, pc.comments, lookup.name
         }
     }
 
-    public function countTotal($status = null, $category = null, $string=null) {
-        
+    public function countTotal($status = null, $category = null, $string = null) {
+
         if ($string) {
             $likeClause = "";
             $likeClause .= ($status || $category) ? " AND " : " WHERE ";
             $likeClause .= "title LIKE '%{$string}%'";
         } else {
-            $likeClause="";
+            $likeClause = "";
         }
         if ((!$status) && (!$category)) {
             $query = self::$countTotal . $likeClause;
@@ -450,7 +359,7 @@ FROM (SELECT p.*, pc.comments, lookup.name
         return $sth->fetchColumn();
     }
 
-    public function getPartial($offset, $limit, $like=null, $status = null, $category = null, $orderby = null, $mode = null) {
+    public function getPartial($offset, $limit, $like = null, $status = null, $category = null, $orderby = null, $mode = null) {
         $fields = array('title', 'status', 'create_time', 'edit_time', 'category');
         if (!in_array($orderby, $fields)) {
             $orderby = " ORDER BY p.create_time";
@@ -468,22 +377,22 @@ FROM (SELECT p.*, pc.comments, lookup.name
             default:
                 $dir = " ASC";
         }
-            $limitClause = " LIMIT {$offset}, {$limit}";
-            
-            //$escaped = addslashes($like);
-        if  ($like) {
+        $limitClause = " LIMIT {$offset}, {$limit}";
+
+        //$escaped = addslashes($like);
+        if ($like) {
             $likeClause = " AND p.title LIKE '%{$like}%'";
         } else {
             $likeClause = "";
         }
-        
+
         if ((!$status) && (!$category )) {
             $stmt = self::$getShallow . $likeClause . $orderby . $dir . $limitClause;
 
             $sth = $this->doStatement($stmt);
         } elseif ((!$status) || (!$category)) {
             $clause = ($status) ? "status" : "category";
-            $query =  sprintf(self::$getSelectivelyShallow, $clause, $clause);
+            $query = sprintf(self::$getSelectivelyShallow, $clause, $clause);
             $stmt = $query . $likeClause . $orderby . $dir . $limitClause;
             if ($status) {
                 $sth = $this->doStatement($stmt, array(
@@ -529,32 +438,29 @@ FROM (SELECT p.*, pc.comments, lookup.name
         $parsedown = new Parsedown();
         //var_dump($parsedown);
 
-        $beginingHtml = $parsedown->parse(htmlspecialchars($body['begining'], ENT_NOQUOTES));
-        $endingHtml = $parsedown->parse(htmlspecialchars($body['ending']), ENT_NOQUOTES);
-        //$beginingHtml = $parsedown->parse($body['begining']);
-        //$endingHtml = $parsedown->parse($body['ending']);
+        //$beginingHtml = $parsedown->parse(htmlspecialchars($body['begining'], ENT_NOQUOTES));
+        //$endingHtml = $parsedown->parse(htmlspecialchars($body['ending']), ENT_NOQUOTES);
 
-        if ( $video ) {
-                $videoTag = AppHelper::instance()->getVideoTag();
-                //$embed = "<embed width='420' height='345' src='{$video}' type='application/x-shockwave-flash'></embed>";
-                $iframe ="<iframe width='420' height='345' src='{$video}'></iframe>";
-                $body['beginingHtml'] = str_replace($videoTag, $iframe ,$beginingHtml, $count);
-                $body['endingHtml'] = ($count) ? $endingHtml : str_replace($videoTag, $iframe ,$endingHtml);
+        $beginingHtml = $parsedown->parse($body['begining']);
+        $endingHtml = $parsedown->parse($body['ending']);
+        
+        if ($video) {
+            $videoTag = AppHelper::instance()->getVideoTag();
+            //$embed = "<embed width='420' height='345' src='{$video}' type='application/x-shockwave-flash'></embed>";
+            $iframe = "<iframe width='420' height='345' src='{$video}'></iframe>";
+            $body['beginingHtml'] = str_replace($videoTag, $iframe, $beginingHtml, $count);
+            $body['endingHtml'] = ($count) ? $endingHtml : str_replace($videoTag, $iframe, $endingHtml);
         } else {
-                $body['beginingHtml'] = $beginingHtml;
-                $body['endingHtml'] = $endingHtml;
+            $body['beginingHtml'] = $beginingHtml;
+            $body['endingHtml'] = $endingHtml;
         }
-        /*
-        $body['beginingHtml'] = $beginingHtml;
-        $body['endingHtml'] = $endingHtml;
-        */
         $data = array_merge(array(
             'title' => $title,
             'author' => $user,
             'status' => $status,
             'id' => $id,
             'category' => $category,
-            'video'=>$video
+            'video' => $video
                 ), $body);
 
         $this->dbh->beginTransaction();
@@ -623,15 +529,15 @@ FROM (SELECT p.*, pc.comments, lookup.name
             $this->removeTags($id);
             $category = $this->getCategory($id);
             $this->decrementCategoryCounter($category);
-            
+
             $imageHandler = new ImageManager();
             $imageHandler->deleteAssociatedImages($id);
-            
+
             $success = $this->doStatement(self::$delete, array('id' => $id))
                     ->rowCount();
             if (!$success) {
                 throw new Exception("Не удалось удалить пост");
-            }            
+            }
             $this->dbh->commit();
             return $success;
         } catch (Exception $e) {
@@ -641,10 +547,10 @@ FROM (SELECT p.*, pc.comments, lookup.name
         }
     }
 
-    public function getCategories($status=null) {
+    public function getCategories($status = null) {
         if ($status) {
             $categories = $this->doStatement(self::$categoriesPublished, array(
-            'status'=>$status))->fetchAll(PDO::FETCH_ASSOC);
+                        'status' => $status))->fetchAll(PDO::FETCH_ASSOC);
         } else {
             $categories = $this->doStatement(self::$categories)->fetchAll(PDO::FETCH_ASSOC);
         }

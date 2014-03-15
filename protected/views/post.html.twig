@@ -55,6 +55,7 @@
 {% endblock %}
 {% block content %}
     {% include 'goToTop_button.html.twig' %}
+<section id="posts">
 Опубликовано: 
                             {{ post.create_time }} <br />
                            {% if post.create_time != post.edit_time %}
@@ -83,6 +84,7 @@ charset="utf-8"></script>
  data-yashareQuickServices="vkontakte,facebook,twitter,odnoklassniki,gplus" data-yashareTheme="counter"
  ></div><br><br> 
 <hr>
+</section>
 <section id='comments'>
 
      {% if comments is defined and comments is not empty %}

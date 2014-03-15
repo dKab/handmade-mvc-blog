@@ -8,22 +8,10 @@ class IndexController extends Controller {
 
     protected function listAction() {
         $model = new PostManager();
-        //$posts = $model->getPartial($offset, $limit, $status);
-        //var_dump($offset);
-        //var_dump($limit);
-        //var_dump($posts);
-        /*
-          echo "<pre>";
-          print_r($_SERVER);
-          echo "</pre>";
-         */
-        // $curURL = substr($_SERVER['REQUEST_URI'], 0, $)$_SERVER['REQUEST_URI'];
-        //$route=$_SERVER['REQUEST_URI'];
         $route = AppHelper::instance()->getRequest()->getRoute(true);
         if (mb_strlen($route) <= 1) {
             $route = "/index/list";
         }
-        //var_dump($route);
         $query = $_SERVER['QUERY_STRING'];
 
         if (!empty($query)) {
@@ -33,32 +21,23 @@ class IndexController extends Controller {
         }
         $route .= "?" . $query;
 
-
-        //$tag = AppHelper::instance()->getRequest()->properties['tag'];
         $tag = filter_input(INPUT_GET, "tag", FILTER_SANITIZE_STRING);
         $category = filter_input(INPUT_GET, "category", FILTER_DEFAULT);
 
-        //var_dump($category);
         if ($tag) {
 
             $title = "Записи с тэгом '{$tag}'";
             $total = $model->countPostsByTag($tag, PostManager::PUBLISHED);
-            //var_dump($posts);
         } elseif ($category) {
 
             $title = "Записи в категории {$category}";
             $total = $model->countPostsByCategory($category, PostManager::PUBLISHED);
-            // var_dump($posts);
         } else {
 
             $total = $model->countTotal(PostManager::PUBLISHED);
         }
-
-        // $total = $model->countTotal(PostManager::PUBLISHED);
-        //var_dump($total);
         $limit = AppHelper::instance()->postsPerPage();
         $lastPage = $pagesNum = ceil($total / $limit);
-        //var_dump($lastPage);
         if (!filter_has_var(INPUT_GET, 'page')) {
             $page = 1;
         } else {
@@ -67,9 +46,6 @@ class IndexController extends Controller {
                 'max_range' => $lastPage));
         }
         $offset = ($page - 1) * $limit;
-        // $parsedown = new Parsedown();
-        //var_dump($parsedown);
-        //$beginingHtml = $parsedown->parse($post['begining']);
         $status = PostManager::PUBLISHED;
         $categories = $model->getCategories($status);
         
@@ -97,22 +73,10 @@ class IndexController extends Controller {
             'total'=>$total,
             'latest'=>$latest
         ));
-        /*
-        $data['query'] = $query;
-        $data['lastPage'] = $lastPage;
-        $data['limit'] = $limit;
-        $data['page'] = $page;
-        $data['curURL'] = $route;
-        $data['total'] = $total;
-        $data['latest'] = $latest;
-        */
         $cloud = $model->getTagCloud();
-        // var_dump($cloud);
-        //exit();
         $data['cloud'] = $cloud;
 
         $this->render("posts.html.twig", $data);
-        //'beginingHtml'=>$beginingHtml,); 
     }
 
     protected function loginAction() {
@@ -124,11 +88,8 @@ class IndexController extends Controller {
     protected function authAction() {
         $model = new PostManager();
         $guard = new AuthManager();
-
-        //$name = AppHelper::getRequest()->getProperty('name');
-        //$password = AppHelper::getRequest()->getProperty('password');
         if (!$this->isFilled(array('name', 'password'))) {
-            $_SESSION['feedback'] = "Все поля обязательны для заполенения";
+            $this->setFeedback("Все поля обязательны для заполенения", 1);
             header("Location: /index/login");
             exit();
         }
@@ -143,7 +104,7 @@ class IndexController extends Controller {
             header('Location: /admin');
             exit();
         } else {
-            $_SESSION['feedback'] = "Неверное имя пользователя или пароль!";
+            $this->setFeedback("Неверное имя пользователя или пароль!", 1);
             header("Location: /index/login");
             exit();
         }
@@ -152,7 +113,7 @@ class IndexController extends Controller {
     protected function commentAction() {
         $id = filter_input(INPUT_POST, 'postId', FILTER_VALIDATE_INT);
         if (!$this->isFilled(array('name', 'email', 'body', 'postId'))) {
-            $_SESSION['feedback'] = "Поля со звёздочкой обязательны";
+            $this->setFeedback("Поля со звёздочкой обязательны", 1);
             header("Location: /index/view?id={$id}");
             exit();
         }
@@ -161,7 +122,7 @@ class IndexController extends Controller {
         $resp = recaptcha_check_answer($privatekey, $_SERVER["REMOTE_ADDR"], $_POST["recaptcha_challenge_field"], $_POST["recaptcha_response_field"]);
 
         if (!$resp->is_valid) {
-            $_SESSION['feedback'] = "Вы неверно ввели каптчу. Попробуйте еще раз.";
+            $this->setFeedback("Вы неверно ввели каптчу. Попробуйте еще раз.", 1);
             header("Location: /index/view?id={$id}");
             exit();
         }
@@ -188,7 +149,7 @@ class IndexController extends Controller {
         $comment = array_merge($post, $input);
         $comment['admin'] = 0;
         if (!$input['email']) {
-            $_SESSION['feedback'] = "Еmail должен быть корректным е-mail адресом";
+            $this->setFeedback("Еmail должен быть корректным е-mail адресом", 1);
             header("Location: /index/view?id={$id}");
             exit();
         }
@@ -199,7 +160,7 @@ class IndexController extends Controller {
             $message = ( (bool) (string) AppHelper::instance()->getCommentRule() ) ?
                     'Спасибо за комментарий. Он будет опубликован после того, как пройдет модерацию.' :
                     'Комментарий успешно добавлен!';
-            $_SESSION['feedback'] = $message;
+            $this->setFeedback($message);
             header("Location: /index/view?id={$id}");
             exit();
         } catch (Exception $e) {

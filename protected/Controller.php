@@ -32,18 +32,18 @@ abstract class Controller {
     abstract protected function indexAction();
 
     protected function getFeedback() {
-        //$data = array();
-        /*
-          if ($this instanceof AdminController) {
-          $this->data['user'] = $_SESSION['user'];
-          }
-         * 
-         */
         if (isset($_SESSION['feedback'])) {
-            $this->data['feedback'] = $_SESSION['feedback'];
+            $this->data['feedback'] = array(
+                'message'=>$_SESSION['feedback']['message'],
+                'error'=>$_SESSION['feedback']['error']);
             unset($_SESSION['feedback']);
         }
         return $this->data;
+    }
+    
+    protected function setFeedback($message, $error=false) {
+        $_SESSION['feedback']['error'] = $error;
+        $_SESSION['feedback']['message'] = $message;
     }
 
     final protected function isFilled(Array $required) {

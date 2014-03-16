@@ -66,7 +66,7 @@
           <a href="{{ "/" ~ controller ~ "/edit?id=" ~ post.id }}">Редактировать</a> | <a href="{{ "/" ~ controller ~ "/delete?id=" ~ post.id }}">Удалить</a>
           </div>
     {% endif %}
-    {% if post.publish_time is not empty %}
+    {% if post.publish_time is not empty and post.status == constant('PostManager::PUBLISHED') %}
         Опубликовано: {{ post.publish_time }} <br>
     {% endif %}
     {% if user is not defined %}

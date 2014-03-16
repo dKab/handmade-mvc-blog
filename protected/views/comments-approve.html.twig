@@ -26,7 +26,7 @@
                            {{ (comment.postTitle|length < 20) ? comment.postTitle : comment.postTitle|slice(0, 20) ~ '...' }}</a>
         <p class="name">{{ comment.name }}</p>
         <p class="body">{{ comment.body|nl2br }}</p>
-        <p class="status">Статус: {{ comment.fancyStatus }}</p>
+        <p>Статус: <span class="{{ (comment.status == constant('CommentManager::APPROVED') )? "status published" : "status" }}">{{ comment.fancyStatus }}<span></p>
     </div>
     <p class="options">
         <a href="/admin/deleteComment?id={{ comment.id }}">Удалить</a>

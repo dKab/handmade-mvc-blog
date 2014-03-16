@@ -6,6 +6,7 @@
 {% endblock %}
 
 {% block content %}
+{% include 'admin-ref.html.twig' %}
 <form method="POST" action="/admin/store" enctype="multipart/form-data">
     {% import 'add_post.html.twig' as form %}
     {# TODO need to pass cut tag somehow #}

@@ -169,5 +169,16 @@ class IndexController extends Controller {
             exit();
         }
     }
+    
+    protected function countTagAction() {
+      $tag = filter_input(INPUT_GET, 'tag', FILTER_DEFAULT);
+      $model = new PostManager();
+      $num = $model->countTag($tag, PostManager::PUBLISHED);
+      if ($num) {
+          echo $num;
+      } else {
+          return false;
+      }
+    }
 
 }

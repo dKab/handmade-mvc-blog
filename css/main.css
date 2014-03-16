@@ -61,7 +61,7 @@ html, body {
     margin-top: 20px;
     border-top: 2px solid #800000;
 }
-ul {
+#nav ul, #posts ul, #sidebar ul {
     list-style: none;
     margin: 0;
     padding: 0;
@@ -174,4 +174,68 @@ input, select {
 .actions {
     font-size: 0.7em;
     font-weight: 600;
+}
+.bold {
+    font-weight: bold;
+}
+.reference-block {
+    padding: 10px;
+    border: 1px solid #CD5C5C;
+    border-top: none;
+    margin: 0 0 15px 0;
+    border-radius: 0 0 5px 5px;
+    background: white;
+}
+.wide {
+    background:  wheat;
+    color: black;
+    border: 1px solid #CD5C5C;
+    padding: 5px;
+    margin: 0;
+    cursor: pointer;
+}
+.triangle {
+        width: 0;
+        height:0;
+}
+.triangle.small {
+    border: 5px solid transparent;
+    border-top: 5px solid #CD5C5C;
+    margin: 0 0 -1px 3px;
+    display: inline-block;
+}
+.triangle.small.closed {
+    border: 5px solid transparent;
+    border-left: 5px solid #CD5C5C; 
+}
+.tip {
+    font-size: smaller;
+    width: 80px;
+    color: white;
+    z-index: 10;
+    opacity: 0.7;
+    text-align: center;
+    cursor: pointer;
+    font-weight: 700;
+}
+.tag_num {
+    font-weight: 900;
+}
+.triangle.point {
+    display: inline-block;
+    border: 10px solid transparent; 
+    border-bottom: 10px solid black;
+    margin-bottom: -5px;
+}
+.transparent {
+    background: transparent;
+    padding: 0;
+}
+.black {
+  background:  black;
+  padding: 5px;
+  border-radius: 5px;
+}
+.transparent, .black {
+    margin: 0;
 }

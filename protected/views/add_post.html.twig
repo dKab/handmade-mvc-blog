@@ -6,6 +6,7 @@
 {% endblock %}
 
 {% block content %}
+{% include 'admin-ref.html.twig' %}
 <form method="POST" action="/admin/store" enctype="multipart/form-data">
 
        {% macro post(categories, title, body, tags, status, curCategory, video, archive) %}
@@ -51,5 +52,4 @@
     {% import _self as form %}
         {{ form.post(categories) }}
 </form>
-
 {% endblock %}

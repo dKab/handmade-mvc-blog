@@ -128,9 +128,13 @@ class AdminController extends Controller {
     protected function addAction() {
         $model = new PostManager();
         $categories = $model->getCategories();
+        $videoTag = AppHelper::instance()->getVideoTag();
+        $cutTag = AppHelper::instance()->getCutTag();
         $this->render('add_post.html.twig', array(
             'title' => 'Новая запись',
             'categories' => $categories,
+            'videoTag'=>$videoTag,
+            'cutTag'=>$cutTag,
         ));
     }
 
@@ -330,11 +334,14 @@ class AdminController extends Controller {
         if (!$post) {
             throw new NotFoundException("couldn't find requested post" . $id);
         }
-
+        $videoTag = AppHelper::instance()->getVideoTag();
+        $cutTag = AppHelper::instance()->getCutTag();
         $this->render('edit.html.twig', array(
             'post' => $post,
             'title' => 'Редактировать запись',
             'categories' => $categories,
+            'videoTag'=>$videoTag,
+            'cutTag'=>$cutTag,
         ));
     }
 
@@ -489,6 +496,17 @@ class AdminController extends Controller {
             echo $e->getMessage();
             exit();
         }
+    }
+    
+    protected function countTagAction() {
+      $tag = filter_input(INPUT_GET, 'tag', FILTER_DEFAULT);
+      $model = new PostManager();
+      $num = $model->countTag($tag);
+      if ($num) {
+          echo $num;
+      } else {
+          return false;
+      }
     }
 
 }

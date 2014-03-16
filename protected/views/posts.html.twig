@@ -39,7 +39,7 @@
                  {% endautoescape %}
         <a href="{{ link }}">Читать дальше&rarr;</a><br><br>
         Тэги: {% for tag in post.tags %}
-        <a href="{{ "/" ~ controller ~ "/list?tag=" ~ tag }}" class="tag">{{ tag }}</a> 
+        <a href="{{ "/" ~ controller ~ "/list?tag=" ~ tag }}" class="tag" data-controller="{{ controller }}">{{ tag }}</a> 
                           {% endfor %}
         <span class="comments_count">  Комментариев: {{ post.comments|default(0) }} </span>
     </li>

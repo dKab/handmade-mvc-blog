@@ -54,7 +54,7 @@ class PostManager extends Transaction {
     private static $getStatus = "SELECT status FROM posts WHERE id=:id";
     private static $update = "UPDATE posts SET
                        author = :author,
-                       title = :title, begining = :begining, ending=:ending, edit_time = NOW(), publish_time=%s,
+                       title = :title, begining = :begining, ending=:ending, edit_time = NOW(), publish_time=:publishTime,
                        status = :status, begining_html=:beginingHtml, ending_html=:endingHtml, category=:category, video=:video WHERE id=:id";
     private static $delete = 'DELETE FROM posts WHERE id=:id';
     private static $checkTagInPost = "SELECT * FROM post_tag WHERE post_id = :post AND tag_id = :tag";
@@ -122,10 +122,14 @@ FROM (SELECT p.*, pc.comments, lookup.name
     private static $updateFreq = "UPDATE tags SET frequency = frequency-1
                                   WHERE id IN (SELECT tag_id FROM post_tag WHERE post_id = :id)
                                   AND frequency > 1";
-    private static $getPopularTags = "SELECT t.* from tags t
-                   JOIN post_tag pt ON t.id=pt.tag_id
-                   JOIN posts p ON p.id = pt.post_id WHERE p.status =:status GROUP BY t.id
-                   ORDER BY frequency desc";
+    private static $getPopularTags = "select t.name, count(tag_id) as frequency from
+                                     tags t join post_tag pt on t.id = pt.tag_id join posts p on pt.post_id = p.id where 
+                                     status =:status group by tag_id order by frequency desc";
+    private static $countTagPublished = "select tp.frequency from
+                                        (select t.name, count(tag_id) as frequency from 
+                                        tags t join post_tag pt on t.id = pt.tag_id join posts p on pt.post_id = p.id 
+                                        where status = :status group by tag_id) as tp where tp.name = :name";
+    private static $countTagAll = "select frequency from tags where name=:name";
 
     private function explodeTags(Array $posts) {
         foreach ($posts as $key => $val) {
@@ -496,17 +500,28 @@ FROM (SELECT p.*, pc.comments, lookup.name
             }
             
             //$curStatus = $this->doStatement(self::$getStatus, array('id'=>$id))->fetchColumn();
-            
+           
             if ( $status == self::PUBLISHED ) {
-                $publishTime= ($curPublishTime) ? $curPublishTime : "NOW()";
+                $publishTime= ($curPublishTime) ? $curPublishTime /*DateTime::createFromFormat('Y-m-d H:i:s', $curPublishTime)*/ : new DateTime();
             } else {
-                $publishTime = ($curPublishTime) ? $curPublishTime : "NULL";
+                
+                $publishTime = ($curPublishTime) ?  $curPublishTime /*DateTime::createFromFormat('Y-m-d H:i:s', $curPublishTime)*/ : null;
+                //var_dump($publishTime);
+                //die();
             }
             
-            $updStmt = sprintf(self::$update, $publishTime);
             
-            $sth = $this->doStatement($updStmt, $data);
-
+            //$updStmt = sprintf(self::$update, $publishTime);
+            /*
+            var_dump($curPublishTime);
+            var_dump($updStmt);
+            die();
+            */
+            $sth = $this->doStatement(self::$update, array_merge($data, array('publishTime'=>$publishTime)));
+            $updated = $sth->rowCount();
+            if ( ! $updated ) {
+                throw new Exception("Не удалось обновить запись");
+            }
             $this->removeTags($id);
 
             if (!empty($tags)) {
@@ -630,6 +645,16 @@ FROM (SELECT p.*, pc.comments, lookup.name
             ksort($weights);
         }
         return $weights;
+    }
+    
+    public function countTag($name, $status=null) {
+        if ( !$status ) {
+            $num = $this->doStatement(self::$countTagAll, array('name'=>$name))->fetchColumn();
+        } else {
+            $num = $this->doStatement(self::$countTagPublished, array('name'=>$name, 'status'=>self::PUBLISHED))
+                    ->fetchColumn();
+        }
+        return $num;
     }
 
 }

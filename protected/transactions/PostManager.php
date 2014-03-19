@@ -9,6 +9,12 @@ class PostManager extends Transaction {
     const DRAFT = 1;
     const PUBLISHED = 2;
     const ARCHIVE = 3;
+    
+    private $allowedFields  = array('title', 'body', 'status', 'tags', 'video', 'new_category');
+    
+    public function getAllowedFields() {
+        return $this->allowedFields;
+    }
 
     private static $countAllPostsWithTag = "SELECT frequency FROM tags WHERE name=:tag";
     private static $countPostsWithTagAndStatus = "SELECT count(*) FROM posts p join post_tag pt
@@ -59,7 +65,7 @@ class PostManager extends Transaction {
     private static $delete = 'DELETE FROM posts WHERE id=:id';
     private static $checkTagInPost = "SELECT * FROM post_tag WHERE post_id = :post AND tag_id = :tag";
     private static $linkTag = "INSERT INTO post_tag VALUES(:post, :tag)";
-    private static $findByStatus = "SELECT p.id, p.title, p.create_time, p.edit_time, p.status, p.begining_html, GROUP_CONCAT(DISTINCT t.name SEPARATOR ', ') as tags, p.comments
+    private static $findByStatus = "SELECT p.id, p.title, p.create_time, p.edit_time, p.publish_time, p.status, p.begining_html, GROUP_CONCAT(DISTINCT t.name SEPARATOR ', ') as tags, p.comments
 
     FROM (SELECT p.*, pc.comments
       FROM posts p
@@ -130,7 +136,7 @@ FROM (SELECT p.*, pc.comments, lookup.name
                                         tags t join post_tag pt on t.id = pt.tag_id join posts p on pt.post_id = p.id 
                                         where status = :status group by tag_id) as tp where tp.name = :name";
     private static $countTagAll = "select frequency from tags where name=:name";
-
+    
     private function explodeTags(Array $posts) {
         foreach ($posts as $key => $val) {
             $tags = explode(", ", $val['tags']);
@@ -297,9 +303,7 @@ FROM (SELECT p.*, pc.comments, lookup.name
             } else {
                 $sth = $this->doStatement(self::$addPost, $data);
             }
-            if (!$postId = $this->dbh->lastInsertId()) {
-                throw new Exception("Не удалось добавить пост");
-            }
+            $postId = $this->dbh->lastInsertId();
             if (!empty($tags)) {
                 $this->bindTags($postId, $tags);
             }
@@ -310,6 +314,7 @@ FROM (SELECT p.*, pc.comments, lookup.name
         } catch (Exception $e) {
             $this->dbh->rollBack();
             $this->error = $e->getMessage();
+            throw new Exception("{$this->error}");
             return false;
         }
     }
@@ -502,10 +507,11 @@ FROM (SELECT p.*, pc.comments, lookup.name
             //$curStatus = $this->doStatement(self::$getStatus, array('id'=>$id))->fetchColumn();
            
             if ( $status == self::PUBLISHED ) {
-                $publishTime= ($curPublishTime) ? $curPublishTime /*DateTime::createFromFormat('Y-m-d H:i:s', $curPublishTime)*/ : new DateTime();
+                $now= new DateTime();
+                $publishTime= ($curPublishTime) ? $curPublishTime : $now->format('Y-m-d H:i:s');
             } else {
                 
-                $publishTime = ($curPublishTime) ?  $curPublishTime /*DateTime::createFromFormat('Y-m-d H:i:s', $curPublishTime)*/ : null;
+                $publishTime = ($curPublishTime) ?  $curPublishTime : null;
                 //var_dump($publishTime);
                 //die();
             }
@@ -541,6 +547,8 @@ FROM (SELECT p.*, pc.comments, lookup.name
     }
 
     private function bindTags($postId, Array $tags) {
+        //var_dump($tags);
+        //die();
         foreach ($tags as $name) {
             $sth = $this->doStatement(self::$findTag, array(
                 'name' => $name));
@@ -548,24 +556,19 @@ FROM (SELECT p.*, pc.comments, lookup.name
                 $sth = $this->doStatement(self::$updateTag, array(
                     'id' => $id,
                 ));
-                if (!$count = $sth->rowCount()) {
-                    throw new Exception("Не удалось обновить поле frequency тэга");
-                }
             } else {
                 $sth = $this->doStatement(self::$insertTag, array(
                     'name' => $name
                 ));
-                if (!$id = $this->dbh->lastInsertId()) {
-                    throw new Exception("Не удалось добавить тэг");
+                
+                if (!$id = $this->dbh->lastInsertId() ) {
+                    throw new Exception("Не удалось добавить тэг {$name}");
                 }
             }
             $sth = $this->doStatement(self::$linkTag, array(
                 'post' => $postId,
                 'tag' => $id,
             ));
-            if (!$count = $sth->rowCount()) {
-                throw new Exception("Не удалось связать тэг с постом");
-            }
         }
     }
 
@@ -579,13 +582,9 @@ FROM (SELECT p.*, pc.comments, lookup.name
             $imageHandler = new ImageManager();
             $imageHandler->deleteAssociatedImages($id);
 
-            $success = $this->doStatement(self::$delete, array('id' => $id))
-                    ->rowCount();
-            if (!$success) {
-                throw new Exception("Не удалось удалить пост");
-            }
+            $this->doStatement(self::$delete, array('id' => $id));
             $this->dbh->commit();
-            return $success;
+            return true;
         } catch (Exception $e) {
             $this->dbh->rollBack();
             $this->error = $e->getMessage();
@@ -655,6 +654,12 @@ FROM (SELECT p.*, pc.comments, lookup.name
                     ->fetchColumn();
         }
         return $num;
+    }
+    
+    public function getSimilar($term) {
+         $sql= "SELECT name from tags where name LIKE '{$term}%'";
+         $tags = $this->doStatement($sql)->fetchAll(PDO::FETCH_COLUMN, 0);
+         return $tags; 
     }
 
 }

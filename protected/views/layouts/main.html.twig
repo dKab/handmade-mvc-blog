@@ -14,9 +14,11 @@
         <meta name="viewport" content="width=device-width">
         {% block styles %}
         <link rel="stylesheet" href="/css/main.css">
+        <link rel="stylesheet" href="/css/jquery-ui-1.10.4.custom.min.css">
         {% endblock %}
         {% block javascript %}
         <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+        <script src="/javascript/jquery-ui-1.10.4.custom.min.js"></script>
         <script src="/javascript/window_onload.js"></script>
         {% endblock %}
     </head>
@@ -32,7 +34,7 @@
             </ul>
         </div>
         {% endif %}
-        <div id="wrapper" {% if user is defined %} style="margin-top: 50px;" {% endif %}>
+        <div id="wrapper" {% if user is defined %} style="margin-top: 40px;" {% endif %}>
             {% block image %}
             {% endblock %}
             <div id="content">                
@@ -40,7 +42,7 @@
                 <h3>{{ block('title') }} {% if total is defined %} ({{ total }}) |  <span id="home">Вернуться <a href="{{ "/" ~ controller ~ "/list" }}">на Главную</a></span> </h3> {% endif %}</h3>
             {% endblock %}
               {% if feedback is defined %}
-            <div id="feedback" {{ feedback.error ? "class='error'" : ""  }} >{{ feedback.message }}</div> <br />
+            <div id="feedback" {{ feedback.error ? "class='error'" : ""  }} >{{ feedback.message }}</div> <br>
                             {% endif %}
             {% block content %}
             {% endblock %}

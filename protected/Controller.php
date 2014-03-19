@@ -3,6 +3,7 @@
 abstract class Controller {
 
     protected $data = array();
+    protected $input;
 
     protected function doExecute($action = null) {
         if ($action) {
@@ -93,4 +94,23 @@ abstract class Controller {
             'latest'=>$latest,
             'recaptcha' => $recaptcha));
     }
+    
+    protected function countTagAction() {
+      $input = filter_input_array(INPUT_GET,
+              array(
+                  'tag'=>FILTER_DEFAULT,
+                  'filter'=>array(
+                      'filter'=>FILTER_VALIDATE_INT,
+                      'options'=>array('min_range'=>0, 'max_range'=>1)
+                  )
+              ));
+      $model = new PostManager();
+      $num = $model->countTag($input['tag'], $input['filter']);
+      if ($num) {
+          echo $num;
+      } else {
+          return false;
+      }
+    }
+    
 }

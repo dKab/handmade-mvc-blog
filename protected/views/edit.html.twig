@@ -3,6 +3,7 @@
 {% block javascript %}
     {{ parent() }}
 <script type="text/javascript" src="/javascript/add_edit.js"></script>
+<script type="text/javascript" src="/javascript/tags_autocomplete.js"></script>
 {% endblock %}
 
 {% block content %}
@@ -10,9 +11,10 @@
 <form method="POST" action="/admin/store" enctype="multipart/form-data">
     {% import 'add_post.html.twig' as form %}
     {# TODO need to pass cut tag somehow #}
-    {% set body = post.begining ~ "#cut#" ~ post.ending %}
-    <input type="hidden" name="id" value="{{ post.id }}">
+    {# set body = post.begining ~ "#cut#" ~ post.ending #}
+    <input type="hidden" name="id" value="{{ id }}">
     {% set archiveRequired = 1 %}
-    {{ form.post(categories, post.title, body, post.tags|join(', '), post.status, post.category, post.video, archiveRequired) }}
+    {# form.post(categories, post.title, post.video, body, post.tags|join(', '), post.status, post.category, archiveRequired) #}
+    {{ form.post(_context) }}
 </form>
 {% endblock %}

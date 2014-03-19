@@ -1,21 +1,6 @@
 {% extends "main.html.twig" %}
 
 {% block title title|title %}
-{% block styles %}
-    {{ parent() }}
-    <style type="text/css">
-        .comment_brief {
-            background: #EED8FC;
-            border: 1px solid #F0D0B6;
-            border-radius: 5px;
-            margin-top: 10px;
-            padding: 10px;
-        }
-        .name {
-            color: salmon;
-        }
-    </style>
-{% endblock %}
 {% block content %}
    {% if comments is not empty %}
     {% for comment in comments %}
@@ -23,15 +8,15 @@
     <div class="comment_head">
         <p class="time">Добавлен: {{ comment.time|date('d/m/y') }}</p>
         к посту <a href="/admin/view?id={{ comment.post_id }}">
-                           {{ (comment.postTitle|length < 20) ? comment.postTitle : comment.postTitle|slice(0, 20) ~ '...' }}</a>
+                           {{ comment.postTitle }}</a>
         <p class="name">{{ comment.name }}</p>
         <p class="body">{{ comment.body|nl2br }}</p>
         <p>Статус: <span class="{{ (comment.status == constant('CommentManager::APPROVED') )? "status published" : "status" }}">{{ comment.fancyStatus }}<span></p>
     </div>
-    <p class="options">
-        <a href="/admin/deleteComment?id={{ comment.id }}">Удалить</a>
+    <p class="actions">
+        <a class="remove_link" href="/admin/deleteComment?id={{ comment.id }}" data-type="комментарий"><img class="icon" src="/css/images/glyphicons_207_remove_21.png"> Удалить</a>
               {% if comment.status == constant('CommentManager::PENDING') %}
-        | <a href="/admin/approve?id={{ comment.id }}">Утвердить</a>
+        | <a href="/admin/approve?id={{ comment.id }}"><img class="icon" src="/css/images/glyphicons_206_ok_21.png"> Утвердить</a>
               {% endif %}
     </p>
 </div>

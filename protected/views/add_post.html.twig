@@ -3,19 +3,19 @@
 {% block javascript %}
     {{ parent() }}
 <script type="text/javascript" src="/javascript/add_edit.js"></script>
+<script type="text/javascript" src="/javascript/tags_autocomplete.js"></script>
 {% endblock %}
 
 {% block content %}
 {% include 'admin-ref.html.twig' %}
 <form method="POST" action="/admin/store" enctype="multipart/form-data">
 
-       {% macro post(categories, title, body, tags, status, curCategory, video, archive) %}
-        {% set curCategory = curCategory|default(null) %}
+       {% macro post(context) %}
+        {% set curCategory = context.curCategory|default(null) %}
     <label for="category">Категория:</label><br>
-        {% if categories is not empty %}
-    <input type="radio" name="category_type" value="categories" checked>Выбрать из существующих категорий
-    <input type="radio" name="category_type" value="new_category">Создать новую категорию<br>
-
+        {% if context.categories is not empty %}
+    <input type="radio" name="category_type" value="categories" {% if context.new_category|default('') is empty  %} checked {% endif %}>Выбрать из существующих категорий
+    <input type="radio" name="category_type" value="new_category" {% if context.new_category is not empty %} checked {% endif %} >Создать новую категорию<br>
     <select name="categories">
         <option value="">Выберите категорию</option>
                 {% macro categories(curCategory, categories, count) %}
@@ -24,32 +24,32 @@
                 {% endfor %}
                 {% endmacro %}
                 {% import _self as add_form %}
-                    {{ add_form.categories(curCategory, categories, 1) }}
+                    {{ add_form.categories(context.curCategory, context.categories, 1) }}
     </select>
         {% endif %}
-    <input type="text" name="new_category" size="68"><br>
+    <input type="text" name="new_category" size="68" value="{{ context.new_category|default('') }}" ><br>
     <label for="title">Заголовок*:</label><br />
-    <input type="text" name="title" value="{{ title|default('') }}" size="68"></input><br />
+    <input type="text" name="title" value="{{ context.postTitle|default('') }}" size="68"></input><br />
     <label for="video">Прикрепить youtube видео:</label><br>
-    <input type="text" name="video" value="{{ video|default('') }}" size="68"></input><br>
+    <input type="text" name="video" value="{{ context.video|default('') }}" size="68"></input><br>
     <label for="body">Содержимое*:</label><br />
-    <textarea cols="59" rows="25" name="body">{% autoescape false %}{{ body|default('') }}{% endautoescape %}</textarea><br />
+    <textarea cols="59" rows="25" name="body">{% autoescape false %}{{ context.body|default('') }}{% endautoescape %}</textarea><br />
     <label for="tags">Тэги через запятую *</label><br />
-    <input type="text" name="tags" value="{{ tags|default('') }}" size="68"></input><br />
+    <input type="text" name="tags" value="{{ context.tags|default('') }}" size="68"></input><br />
     <label for="status">Пометить в группу:</label>
     <select name="status">
            {% import 'manage.html.twig' as input %}
-            {{ input.statuses(status|default(null), archive|default(0)) }}
+            {{ input.statuses(context.status|default(null), context.archiveRequired|default(0)) }}
     </select><br>
         {% for i in (0..5) %}
             {% set name = "image[" ~ i ~ "]" %}
     <label for="{{ name }}" style="margin-top: 10px; display: inline-block;">Изображение {{ i+1 }}</label>
     <input type="file" name="{{ name }}" size="68"/><br>
         {% endfor %}
-    <input type="submit" value="{{ (title is defined and title is not empty )? 'Сохранить изменения' : 'Отправить' }}"></input><br>
+    <input type="submit" value="{{ (context.archiveRequired is defined and context.archiveRequired is not empty )? 'Сохранить изменения' : 'Отправить' }}"></input><br>
        {% endmacro %}
 
     {% import _self as form %}
-        {{ form.post(categories) }}
+        {{ form.post(_context) }}
 </form>
 {% endblock %}

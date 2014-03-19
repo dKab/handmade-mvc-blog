@@ -3,7 +3,7 @@
     /* position: relative;*/
     width: 980px;
     margin: 0 auto;
-   /*  min-height: 100%;*/
+    /*  min-height: 100%;*/
     padding-bottom: 50px;
     /*height: 100%;*/
 
@@ -32,16 +32,10 @@
     /*  border-left: 1px solid maroon; */
     /* height: 100%; */
     /* padding: 10px; */
-   /* border-top: 2px solid maroon; */
+    /* border-top: 2px solid maroon; */
     border-left: 1px solid wheat;
-   /* border-right: 1px solid lightgray;*/
+    /* border-right: 1px solid lightgray;*/
     margin-bottom: 10px;
-}
-#sidebar p {
-    text-align: center;
-    font-family: sans-serif;
-    margin: 0;
-    padding: 0;
 }
 #sidebar ul {
     padding: 10px;
@@ -54,11 +48,13 @@
     padding: 10px;
 }
 #sidebar p {
-    font-size: larger;
-    background: wheat;
-    margin-top: 0; 
+    background: #FCEFA1;
+    margin: 0 0 10px 0; 
+    color:  black;
+    text-align: center;
+    font-family: sans-serif;
+    font-weight: 500;
     padding: 5px;
-    color:  brown;
 }
 #sidebar .name {
     color: indianred;
@@ -67,7 +63,7 @@
     font-size: smaller;
 }
 #sidebar dd {
-   /* border: 1px solid sandybrown; */
+    /* border: 1px solid sandybrown; */
     border-radius: 5px;
     padding: 5px;
     background: cornsilk;
@@ -89,10 +85,6 @@ h5 a {
 h5 a:hover {
     color: rgb(0, 115, 255);
 }
-/*
-#posts {
-    display: inline-block;
-}*/
 #footer {
     background-color: black !important;
     color: cornsilk !important;
@@ -110,7 +102,7 @@ h5 a:hover {
     text-decoration: none;
     background:  palegoldenrod;
 }
-#posts img {
+.post_body img {
     vertical-align: bottom;
 }
 
@@ -142,7 +134,7 @@ h5 a:hover {
     padding:5px;
     position:fixed;
     top:-100px;
-   /* right: 25px; */
+    /* right: 25px; */
     text-align: center;
     cursor: pointer;
     border-radius: 0 5px 5px 0;
@@ -153,6 +145,22 @@ h5 a:hover {
     margin: 0 auto;
 }
 .triangle.top {
-     	border: 10px solid transparent; 
-        border-bottom: 10px solid #800000; 
+    border: 10px solid transparent; 
+    border-bottom: 10px solid #800000; 
+}
+.comment {
+    padding-left: 5px;
+    border: 1px solid #FCEFA1;
+}
+#comment-form {
+    margin-bottom: 20px;
+    padding: 10px;
+}
+.comment.admin {
+    background:  #FCEFA1;
+}
+.reply_link {
+    padding: 5px;
+    background:  white;
+    
 }

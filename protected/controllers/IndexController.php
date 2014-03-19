@@ -111,6 +111,7 @@ class IndexController extends Controller {
     }
 
     protected function commentAction() {
+        
         $id = filter_input(INPUT_POST, 'postId', FILTER_VALIDATE_INT);
         if (!$this->isFilled(array('name', 'email', 'body', 'postId'))) {
             $this->setFeedback("Поля со звёздочкой обязательны", 1);
@@ -168,17 +169,6 @@ class IndexController extends Controller {
             echo $e->getMessage();
             exit();
         }
-    }
-    
-    protected function countTagAction() {
-      $tag = filter_input(INPUT_GET, 'tag', FILTER_DEFAULT);
-      $model = new PostManager();
-      $num = $model->countTag($tag, PostManager::PUBLISHED);
-      if ($num) {
-          echo $num;
-      } else {
-          return false;
-      }
     }
 
 }

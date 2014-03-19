@@ -1,13 +1,14 @@
-        $(function() {
+     $(function() {
             var $new = $('input[name="new_category"]');
             var $existing = $('select[name="categories"]');
-            var $radio = $('input[name="category_type"]');
-            
-            if ($radio && $radio.val() === 'categories') {
+            var $radioButtons = $('input[name="category_type"]');
+     
+            if ( $radioButtons.eq(1).is(':checked') )  {
+                $existing.hide();
+            } else if ($radioButtons.eq(0).is(':checked') ) {
                 $new.hide();
             }
-            
-            $radio.on('change', function(){
+            $radioButtons.on('change', function() {
                if ($(this).val() === "new_category") {
                        $existing.val('').hide();
                        $new.show();
@@ -17,5 +18,4 @@
                }
            });
         }); 
-
 

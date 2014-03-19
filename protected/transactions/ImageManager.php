@@ -26,7 +26,7 @@ class ImageManager extends Transaction {
 
     public function storeImages($postId) {
         if (count($this->files) > $this->maxFiles) {
-            throw new Exception("Превышено ограничение на количество изображений");
+            throw new WrongInputException("Превышено ограничение на количество изображений");
         }
 
         $dir = $this->makeDir($postId);
@@ -42,14 +42,14 @@ class ImageManager extends Transaction {
         ($files['image']['tmp_name'][$i] != 'none')) {
             $name = $files['image']['name'][$i];
             if ($files['image']['size'][$i] == 0) {
-                throw new Exception("Изображение {$name} имеент нулевой размер");
+                throw new WrongInputException("Изображение {$name} имеент нулевой размер");
             }
             if ($files['image']['size'][$i] > $this->maxSize) {
-                throw new Exception("Изображение {$name}"
+                throw new WrongInputException("Изображение {$name}"
                 . "превышает максимаольный размер в {$this->maxSize} байт");
             }
             if (!getimagesize($files['image']['tmp_name'][$i])) {
-                throw new Exception("Файл {$name} не является изображением");
+                throw new WrongInputException("Файл {$name} не является изображением");
             }
             $destination = $dir . "/" . $name;
 

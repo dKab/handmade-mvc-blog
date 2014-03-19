@@ -56,6 +56,7 @@ class AppHelper {
             );
 
             $connection = new PDO("mysql:host={$host};dbname={$name}", $user, $password, $options);
+            $connection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             $this->connection = $connection;
         }
         return $this->connection;

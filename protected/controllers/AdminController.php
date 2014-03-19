@@ -125,47 +125,84 @@ class AdminController extends Controller {
         exit();
     }
 
-    protected function addAction() {
+    protected function addAction(array $data = array()) {
         $model = new PostManager();
         $categories = $model->getCategories();
         $videoTag = AppHelper::instance()->getVideoTag();
         $cutTag = AppHelper::instance()->getCutTag();
-        $this->render('add_post.html.twig', array(
+        $this->render('add_post.html.twig', array_merge($data, array(
             'title' => 'Новая запись',
             'categories' => $categories,
-            'videoTag'=>$videoTag,
-            'cutTag'=>$cutTag,
-        ));
+            'videoTag' => $videoTag,
+            'cutTag' => $cutTag,
+        )));
     }
 
-    protected function storeAction() {
-        if (!$this->isFilled(array('title', 'body', 'status', 'tags'))) {
-            $message = "Поля, помеченные звёздочкой должны быть заполнены";
-            $this->setFeedback($message, true);
-            if (filter_has_var(INPUT_POST, 'id')) {
-                $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
-                header("Location: /admin/edit?id={$id}");
-            } else {
-                header("Location: /admin/add/");
-            }
-            exit();
+    protected function editAction(array $data = array()) {
+        $id = filter_input(INPUT_GET, "id", FILTER_VALIDATE_INT);
+        $model = new PostManager();
+        $categories = $model->getCategories();
+        $post = $model->getPost($id, true);
+        if (!$post) {
+            throw new NotFoundException("couldn't find requested post" . $id);
         }
+        $videoTag = AppHelper::instance()->getVideoTag();
+        $cutTag = AppHelper::instance()->getCutTag();
+        $this->render('edit.html.twig', array_merge(array(
+            //'post' => $post,
+            'id' => $post['id'],
+            'postTitle' => $post['title'],
+            'video' => $post['video'],
+            'body' => $post['begining'] . AppHelper::instance()->getCutTag() . $post['ending'],
+            'tags' => implode(", ", $post['tags']),
+            'status' => $post['status'],
+            'curCategory' => $post['category'],
+            'title' => 'Редактировать запись',
+            'categories' => $categories,
+            'videoTag' => $videoTag,
+            'cutTag' => $cutTag,
+                        ), $data));
+    }
 
-        $defaultCategory = AppHelper::instance()->getDefaultCategory();
+    private function repeatInput(array $input = array()) {
+        if (array_key_exists('id', $input)) {
+            $this->editAction($input);
+        } else {
+            $this->addAction($input);
+        }
+        die();
+    }
 
-        if (isset($_POST['category_type']) && ($_POST['category_type'] == "new_category")) {
-            $category = (isset($_POST['new_category']) && (!empty($_POST['new_category']) ) ) ?
-                    $_POST['new_category'] : $defaultCategory;
-        } elseif (isset($_POST['category_type']) && ($_POST['category_type'] == "categories")) {
-            $category = (isset($_POST['new_category']) && (!empty($_POST['categories']) ) ) ?
-                    $_POST['categories'] : $defaultCategory;
-        } elseif (isset($_POST['new_category']) && (!empty($_POST['new_category']) )) {
+    private function getCategory() {
+        $defaultCategory = (string) AppHelper::instance()->getDefaultCategory();
+        if (!empty($_POST['categories'])) {
+            $category = $_POST['categories'];
+        } elseif (!empty($_POST['new_category'])) {
             $category = $_POST['new_category'];
         } else {
             $category = $defaultCategory;
         }
+        return $category;
+    }
 
+    private function rememberRawInput(array $allowedFields) {
+        $category = $this->getCategory();
+        $input = $_POST;
+        //$fields = array('title', 'body', 'status', 'tags', 'video', 'new_category');
+        foreach ($input as $key => $val) {
+            if (!in_array($key, $allowedFields)) {
+                unset($input[$key]);
+            }
+            if ($key == 'title') {
+                $input['postTitle'] = $val;
+                unset($input[$key]);
+            }
+        }
+        $input['curCategory'] = $category;
+        $this->input = $input;
+    }
 
+    private function filterPostInput() {
         $trusty = filter_input_array(INPUT_POST, array(
             'status' => array(
                 'filter' => FILTER_VALIDATE_INT,
@@ -194,47 +231,37 @@ class AdminController extends Controller {
             'video' => array(
                 'filter' => FILTER_DEFAULT
         )));
+        return $trusty;
+    }
 
-        $fields = array('title', 'body', 'status', 'tags', 'video');
-        $post = array();
-        array_walk($_POST, function($val, $key) use (&$post, $fields) {
-            if (in_array($key, $fields)) {
-                $post[$key] = $val;
+    protected function storeAction() {
+        try {
+            $model = new PostManager();
+            $fields = $model->getAllowedFields();
+            if (!$this->isFilled(array('title', 'body', 'status', 'tags'))) {
+                $this->rememberRawInput($fields);
+                throw new WrongInputException("Поля со звёздочкой должны быть заполнены!");
             }
-        });
-        $input = array_merge($post, $trusty);
-
-        // $input = array_merge($_POST, $trusty);
-        $input['user'] = $_SESSION['user'];
-
-        $input['category'] = $category;
-        $model = new PostManager();
-
-        if ($input['id']) {
-            $message = 'Изменения успешно сохранены!';
+            /*
+             * Если все необходимые поля заполнены фильтруем входные данные и пытаемся сохранить пост
+             */
+            $trusty = $this->filterPostInput();
+            $post = array();
+            array_walk($_POST, function($val, $key) use (&$post, $fields) {
+                if (in_array($key, $fields)) {
+                    $post[$key] = $val;
+                }
+            });
+            $entry = array_merge($post, $trusty, array('user' => $_SESSION['user'], 'category' => $this->getCategory()));
+            $newId = ($entry['id']) ? $model->editPost($entry) : $model->addPost($entry);
+            $message = ($entry['id']) ? "Изменения успешно сохранены!" : "Запись успешно добавлена!";
             $this->setFeedback($message);
-            $success = $model->editPost($input);
-            if (!$success) {
-                $message = $model->getError();
-                $error = true;
-                $this->setFeedback($message, $error);
-                header("Location: /admin/edit?id={$input['id']}");
-                exit();
-            }
-        } else {
-            //var_dump($input);
-            $success = $model->addPost($input);
-            $this->setFeedback("Запись успешно добавлена!");
-            if (!$success) {
-                $message = $model->getError();
-                $error = true;
-                $this->setFeedback($message, $error);
-                header("Location: /admin/add/");
-                exit();
-            }
+            header("Location: /admin/view?id={$newId}");
+            exit();
+        } catch (WrongInputException $e) {
+            $this->setFeedback($e->getMessage(), 1);
+            $this->repeatInput($this->input);
         }
-        header("Location: /admin/view?id={$success}");
-        exit();
     }
 
     protected function manageAction() {
@@ -323,25 +350,6 @@ class AdminController extends Controller {
             'dir' => $dir,
             'array' => $safeInput,
             'string' => $string
-        ));
-    }
-
-    protected function editAction() {
-        $id = filter_input(INPUT_GET, "id", FILTER_VALIDATE_INT);
-        $model = new PostManager();
-        $categories = $model->getCategories();
-        $post = $model->getPost($id, true);
-        if (!$post) {
-            throw new NotFoundException("couldn't find requested post" . $id);
-        }
-        $videoTag = AppHelper::instance()->getVideoTag();
-        $cutTag = AppHelper::instance()->getCutTag();
-        $this->render('edit.html.twig', array(
-            'post' => $post,
-            'title' => 'Редактировать запись',
-            'categories' => $categories,
-            'videoTag'=>$videoTag,
-            'cutTag'=>$cutTag,
         ));
     }
 
@@ -497,16 +505,12 @@ class AdminController extends Controller {
             exit();
         }
     }
-    
-    protected function countTagAction() {
-      $tag = filter_input(INPUT_GET, 'tag', FILTER_DEFAULT);
-      $model = new PostManager();
-      $num = $model->countTag($tag);
-      if ($num) {
-          echo $num;
-      } else {
-          return false;
-      }
+
+    protected function getSuggestionsAction() {
+        $term = filter_input(INPUT_GET, 'term', FILTER_DEFAULT);
+        $model = new PostManager();
+        $tags = $model->getSimilar($term);
+        echo json_encode($tags);
     }
 
 }

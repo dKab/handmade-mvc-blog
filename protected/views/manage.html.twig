@@ -1,58 +1,6 @@
 {% extends "main.html.twig" %}
 
 {% block title title %}
-
-{% block styles %}
-<style type="text/css">
-    td, th {
-        border-right: 1px solid white;
-        padding: 5px;
-    }
-    table {
-        border-collapse: collapse;
-        font-size: smaller;
-        cellpadding: 0.5;
-        float: right;
-        table-layout:fixed;
-    }
-    th {
-        background: wheat;
-
-    }
-    form {
-        margin: 10px;
-    }
-
-    tr:nth-child(2n+1) {
-        background: wheat;
-    }/*
-    .center {
-        /*width: 800px;
-        margin: auto;
-    } */
-    th+th {
-        width: 40px;
-    }
-    th:first-child {
-        width: 400px;
-    }
-    th:nth-child(2) {
-        width: 200px;
-    }
-    th:last-child {
-        width: 300px;
-    }
-    td+td {
-        text-align: center;
-    }
-    label {
-        width: 80px;
-        display: inline-block;
-    }
-</style>
-   {{ parent() }}
-{% endblock %}
-
 {% block content %}
 <div class="center">
     <form action="/admin/manage" method="GET">
@@ -85,13 +33,6 @@
         <input type="text" name="title_search" value="{{ string|default('') }}">
         <input type="submit" value="Поиск">
     </form>
-    <!--
-    <form type="/admin/manage" method="GET">
-                <label for="title_search">Искать в заголовках</label>
-        <input type="text" name="title_search">
-        <input type="hidden" name="title_search_query" value="1">
-        <input type="submit" value="Найти">
-    </form> -->
 {% if posts is not empty %}
     <table>
         <tr>
@@ -118,7 +59,7 @@
     {% for post in posts %}
         <tr>
             <td>
-            {{ (post.title|length > 40)? post.title|slice(0, 40) ~ "..." : post.title }}
+            {{ post.title }}
             </td>
             <td>
             {{ post.category }}
@@ -132,10 +73,11 @@
             <td>
             {{ post.name }}
             </td>
-            <td>
-                <a href="{{ "/admin/view?id=" ~ post.id }}">Просмотр</a>
-                <a href="{{ "/admin/edit?id=" ~ post.id }}">Редактировать</a>
-                <a href="{{ "/admin/delete?id=" ~ post.id }}">Удалить</a>
+            <td><div class="actions">
+                    <a href="{{ "/admin/view?id=" ~ post.id }}"><img class="icon" title="Открыть запись" src="/css/images/glyphicons_027_search.png"></a>
+                <a href="{{ "/admin/edit?id=" ~ post.id }}"><img class="icon" title="Редактировать запись" src="/css/images/glyphicons_030_pencil.png"></a>
+                <a href="{{ "/admin/delete?id=" ~ post.id }}" class="remove_link" data-type="пост"><img class="icon" title="Удалить запись"  src="/css/images/glyphicons_207_remove_21.png"></a>
+                </div>
             </td>
         </tr>
     {% endfor %}

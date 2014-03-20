@@ -1,6 +1,6 @@
 <?php
 
-class CommentManager extends Transaction {
+class CommentManager extends Model {
 
     const PENDING = 1;
     const APPROVED = 2;

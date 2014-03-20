@@ -1,6 +1,6 @@
 <?php
 
-class PostManager extends Transaction {
+class PostManager extends Model {
 
     public function __construct() {
         parent::__construct();

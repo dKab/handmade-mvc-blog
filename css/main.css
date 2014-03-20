@@ -137,6 +137,8 @@ input, select {
     border: 1px solid crimson;
 }
 #feedback {
+    display: block;
+    margin: 10px 0 !important;
     background:  lightgreen;
     border: 1px solid forestgreen;
     border-radius: 5px;

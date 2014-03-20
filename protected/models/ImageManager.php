@@ -1,6 +1,6 @@
 <?php
 
-class ImageManager extends Transaction {
+class ImageManager extends Model {
 
     private $files;
     private $maxFiles;

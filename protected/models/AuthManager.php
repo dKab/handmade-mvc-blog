@@ -1,6 +1,6 @@
 <?php
 
-class AuthManager extends Transaction {
+class AuthManager extends Model {
 
     public function __construct() {
         parent::__construct();

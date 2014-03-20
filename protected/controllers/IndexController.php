@@ -48,7 +48,7 @@ class IndexController extends Controller {
         $offset = ($page - 1) * $limit;
         $status = PostManager::PUBLISHED;
         $categories = $model->getCategories($status);
-        
+
         $commentHandler = new CommentManager();
         $latest = $commentHandler->getLatest();
 
@@ -65,13 +65,13 @@ class IndexController extends Controller {
             $data['title'] = $title;
         }
         $data = array_merge($data, array(
-            'query'=>$query,
-            'lastPage'=>$lastPage,
-            'limit'=>$limit,
-            'page'=>$page,
-            'curURL'=>$route,
-            'total'=>$total,
-            'latest'=>$latest
+            'query' => $query,
+            'lastPage' => $lastPage,
+            'limit' => $limit,
+            'page' => $page,
+            'curURL' => $route,
+            'total' => $total,
+            'latest' => $latest
         ));
         $cloud = $model->getTagCloud();
         $data['cloud'] = $cloud;
@@ -109,54 +109,46 @@ class IndexController extends Controller {
             exit();
         }
     }
+    
+    private function getInput() {
+        $fieldsToRemain = array('name','email','body');
+        return array_intersect_key($_POST, array_flip($fieldsToRemain));
+    }
 
     protected function commentAction() {
-        
-        $id = filter_input(INPUT_POST, 'postId', FILTER_VALIDATE_INT);
-        if (!$this->isFilled(array('name', 'email', 'body', 'postId'))) {
-            $this->setFeedback("Поля со звёздочкой обязательны", 1);
-            header("Location: /index/view?id={$id}");
-            exit();
-        }
-        require_once('recaptchalib.php');
-        $privatekey = "6LdBU-8SAAAAAAF2Bhs95JcYDeVNTaR1fN5NbCM_";
-        $resp = recaptcha_check_answer($privatekey, $_SERVER["REMOTE_ADDR"], $_POST["recaptcha_challenge_field"], $_POST["recaptcha_response_field"]);
-
-        if (!$resp->is_valid) {
-            $this->setFeedback("Вы неверно ввели каптчу. Попробуйте еще раз.", 1);
-            header("Location: /index/view?id={$id}");
-            exit();
-        }
-        $input = filter_input_array(INPUT_POST, array(
-            'email' => array(
-                'filter' => FILTER_VALIDATE_EMAIL,
-            ),
-            'notify' => array(
-                'filter' => FILTER_VALIDATE_BOOLEAN
-            ),
-            'parentId' => array(
-                'filter' => FILTER_VALIDATE_INT,
-                'flags' => FILTER_NULL_ON_FAILURE,
-            )
-        ));
-        $fields = array('name', 'body', 'email', 'notify', 'postId', 'parentId');
-        $post = array();
-        array_walk($_POST, function($val, $key) use (&$post, $fields) {
-            if (in_array($key, $fields)) {
-                $post[$key] = $val;
-            }
-        });
-
-        $comment = array_merge($post, $input);
-        $comment['admin'] = 0;
-        if (!$input['email']) {
-            $this->setFeedback("Еmail должен быть корректным е-mail адресом", 1);
-            header("Location: /index/view?id={$id}");
-            exit();
-        }
-
-        $model = new CommentManager();
         try {
+            //$fieldsNeedSaving = array('name','email','body');
+            $id = filter_input(INPUT_POST, 'postId', FILTER_VALIDATE_INT);
+            if (!$this->isFilled(array('name', 'email', 'body', 'postId'))) {
+                throw new WrongInputException("Поля со звёздочкой обязательны");
+            }
+            require_once('vendor/recaptcha/recaptchalib.php');
+            $privatekey = "6LdBU-8SAAAAAAF2Bhs95JcYDeVNTaR1fN5NbCM_";
+            $resp = recaptcha_check_answer($privatekey, $_SERVER["REMOTE_ADDR"], $_POST["recaptcha_challenge_field"], $_POST["recaptcha_response_field"]);
+
+            if ( ! $resp->is_valid ) {
+                throw new WrongInputException("Вы неверно ввели каптчу. Попробуйте еще раз.");
+            }
+            $input = filter_input_array(INPUT_POST, array(
+                'email' => array(
+                    'filter' => FILTER_VALIDATE_EMAIL,
+                ),
+                'notify' => array(
+                    'filter' => FILTER_VALIDATE_BOOLEAN
+                ),
+                'parentId' => array(
+                    'filter' => FILTER_VALIDATE_INT,
+                    'flags' => FILTER_NULL_ON_FAILURE,
+                )
+            ));
+            $fields = array('name', 'body', 'email', 'notify', 'postId', 'parentId');            
+            $post = array_intersect_key( $_POST, array_flip($fields) );
+            $comment = array_merge($post, $input);
+            $comment['admin'] = 0;
+            if (!$input['email']) {
+                throw new WrongInputException("Еmail должен быть корректным е-mail адресом");
+            }
+            $model = new CommentManager();
             $commentId = $model->addComment($comment);
             $message = ( (bool) (string) AppHelper::instance()->getCommentRule() ) ?
                     'Спасибо за комментарий. Он будет опубликован после того, как пройдет модерацию.' :
@@ -164,10 +156,10 @@ class IndexController extends Controller {
             $this->setFeedback($message);
             header("Location: /index/view?id={$id}");
             exit();
-        } catch (Exception $e) {
-            //do something else on production stage
-            echo $e->getMessage();
-            exit();
+        } catch (WrongInputException $e) {
+            $this->setFeedback($e->getMessage(), 1);
+            $this->viewAction($id, $this->getInput());
+            die();
         }
     }
 

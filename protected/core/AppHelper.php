@@ -84,6 +84,9 @@ class AppHelper {
     public function getCommentRule() {
         return $this->options->comments->moderate;
     }
+    public function getMode() {
+        return $this->options->stage;
+    }
 
     public static function twig() {
         $templateDir = "protected/views";

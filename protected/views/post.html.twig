@@ -7,7 +7,9 @@
        </section>
 {% endblock %}
 {% block header %}
+<div>
 Категория: <a href="{{ "/" ~ controller ~ "/list?category=" ~ post.category }}">{{ post.category }}</a> | Вернуться <a href="{{ "/" ~ controller ~ "/list" }}">на Главную</a>
+</div>
 {% endblock %}
 {% block content %}
     {% include 'goToTop_button.html.twig' %}
@@ -65,27 +67,26 @@ charset="utf-8"></script>
     <span><a name="scrollhere">Комментариев пока нет</a></span> | <a href="*" id="add_comment">Комментировать</a><br><br>
      {% endif %}
 </section>       
-     {% macro commentForm(postId, recaptcha, user, controller) %}
-      {% set admin = user|default(null) %}
-<form method='POST' action='{{ "/" ~ controller ~ "/comment" }}' id="comment-form">
+     {% macro commentForm(c) %}
+      {% set admin = c.user|default(null) %}
+<form method='POST' action='{{ "/" ~ c.controller ~ "/comment" }}' id="comment-form">
               {% if admin is empty %}
-    <input type='text' name="name" style="margin-bottom: 10px;">
+    <input type='text' name="name" value="{{ c.name|default('') }}" style="margin-bottom: 10px;">
     <label for='name' >Имя *</label><br>
-    <input type="text" name="email">
+    <input type="text" name="email" value="{{ c.email|default('') }}">
     <label for="email">Email *</label><br>
               {% endif %}
-    <input type="hidden" name="postId" value="{{ postId }}">
+    <input type="hidden" name="postId" value="{{ c.post.id }}">
     <input type="hidden" name="parentId" value="null">
     <label for="body">Комментарий *</label><br>
-    <textarea cols="59" rows="10" name="body">
-    </textarea><br>
+    <textarea cols="59" rows="10" name="body">{{ c.body|default('') }}</textarea><br>
               {% if admin is empty %}
     <input type="checkbox" name="notify" checked="checked">
     <label for="notify">Уведомлять меня по почте об ответах на мой комментарий</label><br>
               {% endif %}
 
               {% autoescape false %}
-                  {{ recaptcha }}
+                  {{ c.recaptcha }}
               {% endautoescape %}
     <input type="submit" value="Отправить">
 </form>
@@ -93,6 +94,6 @@ charset="utf-8"></script>
 
      {% import _self as view %}
            {% set user = user|default(null) %}
-           {{ view.commentForm(post.id, recaptcha, user, controller) }}
+           {{ view.commentForm(_context) }}
 
 {% endblock %}

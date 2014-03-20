@@ -452,57 +452,53 @@ class AdminController extends Controller {
         $this->setFeedback("Категория успешно удалена!");
         header("Location: /admin/list");
     }
+    
+    private function getInput() {
+        $fieldsToRemain = array('body');
+        return array_intersect_key($_POST, array_flip($fieldsToRemain)); 
+    }
 
     protected function commentAction() {
-        $input = filter_input_array(INPUT_POST, array(
-            'parentId' => array(
-                'filter' => FILTER_VALIDATE_INT,
-                'flags' => FILTER_NULL_ON_FAILURE,
-            ),
-            'postId' => array(INPUT_POST, array(
+        try {
+            $input = filter_input_array(INPUT_POST, array(
+                'parentId' => array(
                     'filter' => FILTER_VALIDATE_INT,
                     'flags' => FILTER_NULL_ON_FAILURE,
-                ))
-        ));
-        //$id = filter_input(INPUT_POST, 'postId', FILTER_VALIDATE_INT);
-        if (!$this->isFilled(array('body', 'postId'))) {
-            $this->setFeedback("Поля со звёздочкой обязательны", 1);
-            header("Location: /admin/view?id={$input['postId']}");
-            exit();
-        }
-        require_once('recaptchalib.php');
-        $privatekey = "6LdBU-8SAAAAAAF2Bhs95JcYDeVNTaR1fN5NbCM_";
-        $resp = recaptcha_check_answer($privatekey, $_SERVER["REMOTE_ADDR"], $_POST["recaptcha_challenge_field"], $_POST["recaptcha_response_field"]);
-
-        if (!$resp->is_valid) {
-            $this->setFeedback("Вы неверно ввели каптчу. Попробуйте еще раз", 1);
-            header("Location: /admin/view?id={$input['postId']}");
-            exit();
-        }
-
-        $fields = array('name', 'body', 'postId', 'parentId');
-        $post = array();
-        array_walk($_POST, function($val, $key) use (&$post, $fields) {
-            if (in_array($key, $fields)) {
-                $post[$key] = $val;
+                ),
+                'postId' => array(INPUT_POST, array(
+                        'filter' => FILTER_VALIDATE_INT,
+                        'flags' => FILTER_NULL_ON_FAILURE,
+                    ))
+            ));
+            //$id = filter_input(INPUT_POST, 'postId', FILTER_VALIDATE_INT);
+            if (!$this->isFilled(array('body', 'postId'))) {
+                throw new WrongInputException("Поля со звёздочкой должны быть заполнены!");
             }
-        });
-        $post['name'] = AppHelper::instance()->getUserSign($_SESSION['user']);
-        $post['email'] = AppHelper::instance()->getUserEmail($_SESSION['user']);
-        $post['notify'] = 0;
-        $comment = array_merge($post, $input);
-        $comment['admin'] = 1;
-        $model = new CommentManager();
-        try {
+            require_once('vendor/recaptcha/recaptchalib.php');
+            $privatekey = "6LdBU-8SAAAAAAF2Bhs95JcYDeVNTaR1fN5NbCM_";
+            $resp = recaptcha_check_answer($privatekey, $_SERVER["REMOTE_ADDR"], $_POST["recaptcha_challenge_field"], $_POST["recaptcha_response_field"]);
+
+            if (!$resp->is_valid) {
+                throw new WrongInputException("Вы неверно ввели каптчу. Попробуйте еще раз");
+            }
+
+            $fields = array('name', 'body', 'postId', 'parentId');
+            $post = array_intersect_key($_POST, array_flip($fields));
+            $post['name'] = AppHelper::instance()->getUserSign($_SESSION['user']);
+            $post['email'] = AppHelper::instance()->getUserEmail($_SESSION['user']);
+            $post['notify'] = 0;
+            $comment = array_merge($post, $input);
+            $comment['admin'] = 1;
+            $model = new CommentManager();
             $commentId = $model->addComment($comment);
             $message = 'Комментарий успешно добавлен!';
             $this->setFeedback($message);
             header("Location: /admin/view?id={$input['postId']}");
             exit();
-        } catch (Exception $e) {
-            //do something else on production stage
-            echo $e->getMessage();
-            exit();
+        } catch (WrongInputException $e) {
+            $this->setFeedback($e->getMessage(), 1);
+            $this->viewAction($input['postId'], $this->getInput());
+            die();
         }
     }
 

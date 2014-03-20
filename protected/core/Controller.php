@@ -65,17 +65,17 @@ abstract class Controller {
         echo AppHelper::twig()->render($template, $data);
     }
 
-    protected function viewAction() {
-        $id = filter_input(INPUT_GET, "id", FILTER_VALIDATE_INT);
+    protected function viewAction($postId=null, array $input=array()) {
+        $id = ($postId) ? $postId : filter_input(INPUT_GET, "id", FILTER_VALIDATE_INT);
         $model = new PostManager();
         $post = $model->getPost($id);
         $commentHandler = new CommentManager;
         $comments = $commentHandler->getAllComments($id);
         if (!$post) {
-            throw new NotFoundException("couldn't found requested post" . $id);
+            throw new NotFoundException("couldn't find requested post" . $id);
         }
 
-        require_once('recaptchalib.php');
+        require_once('vendor/recaptcha/recaptchalib.php');
         $publickey = "6LdBU-8SAAAAAMcosmNtVcdNq03HBNWaO5YmHByT";
         $recaptcha = recaptcha_get_html($publickey);
 
@@ -86,13 +86,13 @@ abstract class Controller {
         
         $commentHandler = new CommentManager();
         $latest = $commentHandler->getLatest();
-        $this->render('post.html.twig', array(
+        $this->render('post.html.twig', array_merge(array(
             'post' => $post,
             'comments' => $comments,
             'categories' => $categories,
             'cloud' => $cloud,
             'latest'=>$latest,
-            'recaptcha' => $recaptcha));
+            'recaptcha' => $recaptcha), $input));
     }
     
     protected function countTagAction() {

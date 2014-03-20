@@ -59,9 +59,7 @@
 #sidebar .name {
     color: indianred;
 }
-#sidebar dl {
-    font-size: smaller;
-}
+
 #sidebar dd {
     /* border: 1px solid sandybrown; */
     border-radius: 5px;
@@ -151,6 +149,8 @@ h5 a:hover {
 .comment {
     padding-left: 5px;
     border: 1px solid #FCEFA1;
+    margin: 10px 0;
+    border-radius: 10px;
 }
 #comment-form {
     margin-bottom: 20px;
@@ -162,5 +162,13 @@ h5 a:hover {
 .reply_link {
     padding: 5px;
     background:  white;
-    
+    border-radius: 5px;
+    color: black !important;
+    font-family: arial;
+    border: 1px solid black;
+    font-size: smaller;
+}
+.reply_link:hover {
+    text-decoration: none;
+    box-shadow: none;
 }

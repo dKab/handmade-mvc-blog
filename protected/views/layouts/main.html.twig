@@ -42,7 +42,7 @@
                 <h3>{{ block('title') }} {% if total is defined %} ({{ total }}) |  <span id="home">Вернуться <a href="{{ "/" ~ controller ~ "/list" }}">на Главную</a></span> </h3> {% endif %}</h3>
             {% endblock %}
               {% if feedback is defined %}
-            <div id="feedback" {{ feedback.error ? "class='error'" : ""  }} >{{ feedback.message }}</div> <br>
+            <div id="feedback" style="margin-top: 10px;" {{ feedback.error ? "class='error'" : ""  }} >{{ feedback.message }}</div>
                             {% endif %}
             {% block content %}
             {% endblock %}

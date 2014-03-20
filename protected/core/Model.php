@@ -1,6 +1,6 @@
 <?php
 
-class Transaction {
+class Model {
 
     protected $dbh;
     protected $stmts = array();

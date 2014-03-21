@@ -2,17 +2,10 @@
 
 class Application {
 
-    private $appHelper;
-    
-    const PRODUCTION = 2;
-    const DEVELOPMENT = 1;
+    //private $appHelper;
 
     private function __construct() {
         
-    }
-    
-    private static function isProduction() {
-        return ( (int) AppHelper::instance()->getMode() === self::PRODUCTION );
     }
 
     public static function run() {
@@ -24,6 +17,17 @@ class Application {
     public function init() {
         $appHelper = AppHelper::instance();
         $appHelper->init();
+        if ($appHelper->isProduction()) {
+            //error_reporting(0);
+            ini_set("log_errors", 1);
+            ini_set("error_log", "log/php-error.log");
+            //error_log( "error logging enabled!" );
+             trigger_error("fsdf", E_USER_ERROR); //тест
+        } else {
+            error_reporting(E_ALL);
+        }
+                   // echo ini_get('log_errors');
+         
     }
 
     private function handleRequest() {
@@ -39,7 +43,7 @@ class Application {
                 echo "<h1>404 Not Found</h1>";
                 echo "The page that you have requested could not be found.";
                 exit();
-            }  elseif($this->isProduction()) {
+            } elseif (AppHelper::isProduction()) {
                 header('HTTP/1.0 500 Internal Server Error');
                 echo "<h1>Oops! It seems an error has occured.</h1>"
                 . " The administrator of the site will get a notification. Sorry!";

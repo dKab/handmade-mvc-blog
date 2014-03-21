@@ -1,5 +1,7 @@
 <?php
 mb_internal_encoding('utf-8');
+
+
 error_reporting(1);
 
 define('APP_DIR', "./protected/");

@@ -1,7 +1,14 @@
 <?php
 
 class AppHelper {
+    
+    const PRODUCTION = 2;
+    const DEVELOPMENT = 1;
 
+    public function isProduction() {
+        return ( (int) $this->options->stage === self::PRODUCTION );
+    }
+    
     private static $instance;
     private $config = "protected/config/config.xml";
     private $options;

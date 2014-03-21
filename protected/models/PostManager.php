@@ -9,9 +9,9 @@ class PostManager extends Model {
     const DRAFT = 1;
     const PUBLISHED = 2;
     const ARCHIVE = 3;
-    
-    private $allowedFields  = array('title', 'body', 'status', 'tags', 'video', 'new_category');
-    
+
+    private $allowedFields = array('title', 'body', 'status', 'tags', 'video', 'new_category');
+
     public function getAllowedFields() {
         return $this->allowedFields;
     }
@@ -27,7 +27,6 @@ class PostManager extends Model {
     private static $incrementCategory = "UPDATE categories SET num_posts=num_posts+1 WHERE name=:category";
     private static $decrementCategory = "UPDATE categories SET num_posts=num_posts-1 WHERE name=:category AND num_posts > 0";
     private static $getCategory = "SELECT category FROM posts WHERE id=:id";
-    
     private static $getOldValues = "SELECT category, status, publish_time FROM posts WHERE id=:id";
     private static $deleteCategory = "DELETE FROM categories WHERE name=:category AND num_posts = 0";
     private static $filterByCategoryAndStatus = "SELECT p.id, p.title, p.create_time, p.edit_time, p.publish_time, p.status, p.begining_html, GROUP_CONCAT(DISTINCT t.name SEPARATOR ', ') as tags FROM
@@ -65,8 +64,8 @@ class PostManager extends Model {
     private static $delete = 'DELETE FROM posts WHERE id=:id';
     private static $checkTagInPost = "SELECT * FROM post_tag WHERE post_id = :post AND tag_id = :tag";
     private static $linkTag = "INSERT INTO post_tag VALUES(:post, :tag)";
-    private static $findByStatus = "SELECT p.id, p.title, p.create_time, p.edit_time, p.publish_time, p.status, p.begining_html, GROUP_CONCAT(DISTINCT t.name SEPARATOR ', ') as tags, p.comments
-
+    private static $findByStatus = "SELECT p.id, p.title, p.create_time, p.edit_time, 
+        p.publish_time, p.status, p.begining_html, GROUP_CONCAT(DISTINCT t.name SEPARATOR ', ') as tags, p.comments
     FROM (SELECT p.*, pc.comments
       FROM posts p
       LEFT JOIN 
@@ -76,10 +75,10 @@ class PostManager extends Model {
        GROUP BY post_id
        ) pc 
        ON pc.post_id = p.id) as p
-                                            JOIN post_tag pt
-                                            ON p.id=pt.post_id JOIN tags t
-                                            ON pt.tag_id = t.id WHERE p.status=:status
-                                            GROUP BY p.id ORDER BY create_time desc";
+       JOIN post_tag pt
+       ON p.id=pt.post_id JOIN tags t
+       ON pt.tag_id = t.id WHERE p.status=:status
+       GROUP BY p.id ORDER BY create_time desc";
     private static $getAll = "SELECT p2l.id, p2l.title, p2l.create_time, p2l.edit_time, p2l.publish_time, p2l.status, p2l.begining_html, p2l.name, GROUP_CONCAT(DISTINCT t.name SEPARATOR ', ') as tags, p2l.comments
 FROM (SELECT p.*, pc.comments, lookup.name
       FROM posts p
@@ -119,7 +118,6 @@ FROM (SELECT p.*, pc.comments, lookup.name
     private static $getTags = "SELECT t.name FROM tags t
                                JOIN post_tag p2t ON t.id=p2t.tag_id
                                JOIN posts p ON p2t.post_id=p.id WHERE p.id=:id";
-   
     private static $countTotal = "SELECT COUNT(*) as total FROM posts";
     private static $checkTags = "SELECT COUNT(*) as num FROM post_tag WHERE post_id = :id";
     private static $unlinkTags = "DELETE FROM post_tag WHERE post_id=:id";
@@ -136,7 +134,7 @@ FROM (SELECT p.*, pc.comments, lookup.name
                                         tags t join post_tag pt on t.id = pt.tag_id join posts p on pt.post_id = p.id 
                                         where status = :status group by tag_id) as tp where tp.name = :name";
     private static $countTagAll = "select frequency from tags where name=:name";
-    
+
     private function explodeTags(Array $posts) {
         foreach ($posts as $key => $val) {
             $tags = explode(", ", $val['tags']);
@@ -455,13 +453,12 @@ FROM (SELECT p.*, pc.comments, lookup.name
 
         $parsedown = new Parsedown();
         //var_dump($parsedown);
-
         //$beginingHtml = $parsedown->parse(htmlspecialchars($body['begining'], ENT_NOQUOTES));
         //$endingHtml = $parsedown->parse(htmlspecialchars($body['ending']), ENT_NOQUOTES);
 
         $beginingHtml = $parsedown->parse($body['begining']);
         $endingHtml = $parsedown->parse($body['ending']);
-        
+
         if ($video) {
             $videoTag = AppHelper::instance()->getVideoTag();
             //$embed = "<embed width='420' height='345' src='{$video}' type='application/x-shockwave-flash'></embed>";
@@ -484,48 +481,48 @@ FROM (SELECT p.*, pc.comments, lookup.name
         $this->dbh->beginTransaction();
         try {
             /*
-            $curCategory = $this->getCategory($id);
-            if (!$this->doesCategoryExist($category)) {
-                $this->createCategory($category);
-            }*/
-            $oldValues = $this->doStatement(self::$getOldValues, array('id'=>$id))->fetch(PDO::FETCH_ASSOC);
+              $curCategory = $this->getCategory($id);
+              if (!$this->doesCategoryExist($category)) {
+              $this->createCategory($category);
+              } */
+            $oldValues = $this->doStatement(self::$getOldValues, array('id' => $id))->fetch(PDO::FETCH_ASSOC);
             $curCategory = $oldValues['category'];
             $curStatus = $oldValues['status'];
             $curPublishTime = $oldValues['publish_time'];
             /*
-            echo "<pre>";
-            var_dump($oldValues);
-            echo "</pre>";
-            exit();
+              echo "<pre>";
+              var_dump($oldValues);
+              echo "</pre>";
+              exit();
              * 
              */
             if ($curCategory != $category) {
                 $this->decrementCategoryCounter($curCategory);
                 $this->incrementCategoryCounter($category);
             }
-            
+
             //$curStatus = $this->doStatement(self::$getStatus, array('id'=>$id))->fetchColumn();
-           
-            if ( $status == self::PUBLISHED ) {
-                $now= new DateTime();
-                $publishTime= ($curPublishTime) ? $curPublishTime : $now->format('Y-m-d H:i:s');
+
+            if ($status == self::PUBLISHED) {
+                $now = new DateTime();
+                $publishTime = ($curPublishTime) ? $curPublishTime : $now->format('Y-m-d H:i:s');
             } else {
-                
-                $publishTime = ($curPublishTime) ?  $curPublishTime : null;
+
+                $publishTime = ($curPublishTime) ? $curPublishTime : null;
                 //var_dump($publishTime);
                 //die();
             }
-            
-            
+
+
             //$updStmt = sprintf(self::$update, $publishTime);
             /*
-            var_dump($curPublishTime);
-            var_dump($updStmt);
-            die();
-            */
-            $sth = $this->doStatement(self::$update, array_merge($data, array('publishTime'=>$publishTime)));
+              var_dump($curPublishTime);
+              var_dump($updStmt);
+              die();
+             */
+            $sth = $this->doStatement(self::$update, array_merge($data, array('publishTime' => $publishTime)));
             $updated = $sth->rowCount();
-            if ( ! $updated ) {
+            if (!$updated) {
                 throw new Exception("Не удалось обновить запись");
             }
             $this->removeTags($id);
@@ -560,8 +557,8 @@ FROM (SELECT p.*, pc.comments, lookup.name
                 $sth = $this->doStatement(self::$insertTag, array(
                     'name' => $name
                 ));
-                
-                if (!$id = $this->dbh->lastInsertId() ) {
+
+                if (!$id = $this->dbh->lastInsertId()) {
                     throw new Exception("Не удалось добавить тэг {$name}");
                 }
             }
@@ -645,21 +642,21 @@ FROM (SELECT p.*, pc.comments, lookup.name
         }
         return $weights;
     }
-    
-    public function countTag($name, $status=null) {
-        if ( !$status ) {
-            $num = $this->doStatement(self::$countTagAll, array('name'=>$name))->fetchColumn();
+
+    public function countTag($name, $status = null) {
+        if (!$status) {
+            $num = $this->doStatement(self::$countTagAll, array('name' => $name))->fetchColumn();
         } else {
-            $num = $this->doStatement(self::$countTagPublished, array('name'=>$name, 'status'=>self::PUBLISHED))
+            $num = $this->doStatement(self::$countTagPublished, array('name' => $name, 'status' => self::PUBLISHED))
                     ->fetchColumn();
         }
         return $num;
     }
-    
+
     public function getSimilar($term) {
-         $sql= "SELECT name from tags where name LIKE '{$term}%'";
-         $tags = $this->doStatement($sql)->fetchAll(PDO::FETCH_COLUMN, 0);
-         return $tags; 
+        $sql = "SELECT name from tags where name LIKE '{$term}%'";
+        $tags = $this->doStatement($sql)->fetchAll(PDO::FETCH_COLUMN, 0);
+        return $tags;
     }
 
 }

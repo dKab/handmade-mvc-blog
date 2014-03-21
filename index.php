@@ -2,14 +2,7 @@
 mb_internal_encoding('utf-8');
 
 
-error_reporting(1);
-
 define('APP_DIR', "./protected/");
-/*
-ini_set("log_errors", 1);
-ini_set("error_log", APP_DIR."php-error.log");
- * 
- */
 
 require_once 'vendor/autoload.php';
 

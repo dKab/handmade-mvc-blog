@@ -4,3 +4,14 @@
 [21-Mar-2014 10:57:35 UTC] Hello, errors!
 [21-Mar-2014 10:57:56 UTC] error logging enabled!
 [21-Mar-2014 10:59:21 UTC] error logging enabled!
+[21-Mar-2014 19:01:41 UTC] [2014-03-21 19:01:41+00:00] sfsdgg!
+Код: 1024
+Стек: #0 [internal function]: exception_error_handler(1024, 'sfsdgg!', 'C:\web-developm...', 10, Array)
+#1 C:\web-development\AlenaMVCblog\protected\controllers\IndexController.php(10): trigger_error('sfsdgg!')
+#2 C:\web-development\AlenaMVCblog\protected\controllers\IndexController.php(6): IndexController->listAction()
+#3 C:\web-development\AlenaMVCblog\protected\core\Controller.php(11): IndexController->indexAction()
+#4 C:\web-development\AlenaMVCblog\protected\core\Controller.php(26): Controller->doExecute('indexAction')
+#5 C:\web-development\AlenaMVCblog\protected\core\Application.php(35): Controller->execute('indexAction')
+#6 C:\web-development\AlenaMVCblog\protected\core\Application.php(14): Application->handleRequest()
+#7 C:\web-development\AlenaMVCblog\index.php(32): Application::run()
+#8 {main}

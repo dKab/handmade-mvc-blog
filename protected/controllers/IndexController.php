@@ -7,6 +7,7 @@ class IndexController extends Controller {
     }
 
     protected function listAction() {
+        //trigger_error("sfsdgg!");
         $model = new PostManager();
         $route = AppHelper::instance()->getRequest()->getRoute(true);
         if (mb_strlen($route) <= 1) {

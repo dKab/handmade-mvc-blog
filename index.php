@@ -1,7 +1,6 @@
 <?php
 mb_internal_encoding('utf-8');
 
-
 define('APP_DIR', "./protected/");
 
 require_once 'vendor/autoload.php';

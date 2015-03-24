@@ -1,3 +1,8 @@
-Я решил написать систему управлению блогом "c нуля", чтобы лучше разобраться во всех тонкостях паттерна MVC.
-Я не использовал здесь фреймворки, только шаблонизатор Twig. Знаю, что изобретать велосипеды - плохо, и 
-у меня получился довольно кривой велосипед, но я многому научился в процессе.  
+Install:
+-------
+
+1. Create db & user and change `protected/config/config.xml` accordingly
+2. Import tables from `db_schema/alenablog.sql`
+3. Install dependencies with composer (PHP package manager). To do so change into projects root folder and run
+`composer install`
+
